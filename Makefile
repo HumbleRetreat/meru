@@ -13,7 +13,7 @@ clean:
 
 develop: clean
 	python3.7 -m venv .venv
-	$(VENV_PIP) install --upgrade pip
+	$(VENV_PIP) install --upgrade pip wheel
 	$(VENV_PIP) install -e .[develop]
 
 test:
