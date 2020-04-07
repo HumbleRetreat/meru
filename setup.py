@@ -28,11 +28,10 @@ if __name__ == '__main__':
         extras_require={
             'develop': [
                 'asynctest==0.13.0',
-                'freezegun==0.3.15',
                 'pytest==5.1.1',
                 'pytest-asyncio==0.10.0',
                 'pytest-cov==2.7.1',
-                'pytest-freezegun-0.4.1',
+                'pytest-freezegun==0.4.1',
                 'pytest-mock==2.0.0',
                 'git-pylint-commit-hook==2.5.1',
                 'setuptools_scm==3.2.0',
