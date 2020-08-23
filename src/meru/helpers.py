@@ -46,3 +46,7 @@ def inspect_action_handler(func):
         raise Exception('An action handler needs one action.')
 
     return found_action, calling_args
+
+
+def build_address(ip, port):
+    return f'tcp://{ip}:{port}'

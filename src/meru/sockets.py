@@ -5,12 +5,10 @@ import zmq
 import zmq.asyncio
 
 from meru.actions import Action
+from meru.constants import BIND_ADDRESS, BROKER_ADDRESS, COLLECTOR_PORT, PUBLISHER_PORT, STATE_PORT
 from meru.handlers import handle_action
+from meru.helpers import build_address
 from meru.serialization import decode_object, encode_object
-
-PUBLISHER_SOCKET = 'tcp://127.0.0.1:24051'
-COLLECTOR_SOCKET = 'tcp://127.0.0.1:24052'
-STATE_SOCKET = 'tcp://127.0.0.1:24053'
 
 logger = logging.getLogger('meru.socket')
 
@@ -36,9 +34,10 @@ class MessagingSocket:
 class PublisherSocket(MessagingSocket):
     def __init__(self):
         super().__init__()
+        address = build_address(BIND_ADDRESS, PUBLISHER_PORT)
         self._socket = self.ctx.socket(zmq.PUB)
-        self._socket.bind(PUBLISHER_SOCKET)
-        logger.debug(f'Bound publisher to {PUBLISHER_SOCKET}')
+        self._socket.bind(address)
+        logger.debug(f'Bound publisher to {address}')
 
     async def publish(self, action: Action):
         logger.debug('Publishing %s', action)
@@ -50,10 +49,11 @@ class PublisherSocket(MessagingSocket):
 class CollectorSocket(MessagingSocket):
     def __init__(self):
         super().__init__()
+        bind_address = build_address(BIND_ADDRESS, COLLECTOR_PORT)
         self._socket = self.ctx.socket(zmq.PULL)
-        self._socket.bind(COLLECTOR_SOCKET)
+        self._socket.bind(bind_address)
         self._socket.setsockopt(zmq.LINGER, 0)
-        logger.debug(f'Bound collector to {COLLECTOR_SOCKET}')
+        logger.debug(f'Bound collector to {bind_address}')
 
     async def collect(self):
         while True:
@@ -67,12 +67,13 @@ class CollectorSocket(MessagingSocket):
 class SubscriberSocket(MessagingSocket):
     def __init__(self):
         super().__init__()
+        connect_address = build_address(BROKER_ADDRESS, PUBLISHER_PORT)
         self._socket = self.ctx.socket(zmq.SUB)
-        self._socket.connect(PUBLISHER_SOCKET)
+        self._socket.connect(connect_address)
         self._socket.setsockopt_string(zmq.SUBSCRIBE, '')
         self._socket.setsockopt(zmq.LINGER, 0)
 
-        logger.debug(f'Connected subscriber to {PUBLISHER_SOCKET}')
+        logger.debug(f'Connected subscriber to {connect_address}')
 
     async def handle_incoming_actions(self):
         while True:
@@ -92,10 +93,11 @@ class SubscriberSocket(MessagingSocket):
 class PushSocket(MessagingSocket):
     def __init__(self):
         super().__init__()
+        connect_address = build_address(BROKER_ADDRESS, COLLECTOR_PORT)
         self._socket = self.ctx.socket(zmq.PUSH)
         self._socket.setsockopt(zmq.LINGER, 0)
-        self._socket.connect(COLLECTOR_SOCKET)
-        logger.debug(f'Connected pusher to {COLLECTOR_SOCKET}')
+        self._socket.connect(connect_address)
+        logger.debug(f'Connected pusher to {connect_address}')
 
     async def push(self, action: Action):
         await self._socket.send_multipart([action.topic, encode_object(action)])
@@ -104,10 +106,11 @@ class PushSocket(MessagingSocket):
 class StateManagerSocket(MessagingSocket):
     def __init__(self):
         super().__init__()
+        bind_address = build_address(BIND_ADDRESS, STATE_PORT)
         self._socket = self.ctx.socket(zmq.ROUTER)
         self._socket.setsockopt(zmq.LINGER, 0)
-        self._socket.bind(STATE_SOCKET)
-        logger.debug(f'Bound state manager to {STATE_SOCKET}')
+        self._socket.bind(bind_address)
+        logger.debug(f'Bound state manager to {bind_address}')
 
     async def answer_state_request(self, identity, action):
         logger.debug(f'Sending state update to {identity}')
@@ -124,10 +127,11 @@ class StateManagerSocket(MessagingSocket):
 class StateConsumerSocket(MessagingSocket):
     def __init__(self):
         super().__init__()
+        connect_address = build_address(BROKER_ADDRESS, STATE_PORT)
         self._socket = self.ctx.socket(zmq.DEALER)
         self._socket.setsockopt(zmq.LINGER, 0)
-        self._socket.connect(STATE_SOCKET)
-        logger.debug(f'Connected state consumer to {STATE_SOCKET}')
+        self._socket.connect(connect_address)
+        logger.debug(f'Connected state consumer to {connect_address}')
 
     async def request_state(self, action):
         await self._socket.send_multipart([encode_object(action)])

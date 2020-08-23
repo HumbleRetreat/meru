@@ -1,0 +1,8 @@
+import os
+
+BIND_ADDRESS = os.environ.get('BIND_ADDRESS', '127.0.0.1')
+BROKER_ADDRESS = os.environ.get('BROKER_ADDRESS', '127.0.0.1')
+
+PUBLISHER_PORT = '24051'
+COLLECTOR_PORT = '24052'
+STATE_PORT = '24053'
