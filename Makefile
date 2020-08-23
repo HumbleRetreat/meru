@@ -12,8 +12,8 @@ clean:
 	-rm -rf src/*.egg-info
 
 develop: clean
-	python3.7 -m venv .venv
-	$(VENV_PIP) install --upgrade pip wheel
+	python3.8 -m venv .venv
+	$(VENV_PIP) install --upgrade pip wheel twine
 	$(VENV_PIP) install -e .[develop]
 
 test:

@@ -27,7 +27,6 @@ if __name__ == '__main__':
         use_scm_version=True,
         extras_require={
             'develop': [
-                'asynctest==0.13.0',
                 'pytest==5.1.1',
                 'pytest-asyncio==0.10.0',
                 'pytest-cov==2.7.1',

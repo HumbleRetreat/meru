@@ -1,5 +1,6 @@
+from unittest.mock import create_autospec
+
 import pytest
-from asynctest import create_autospec
 
 from meru.handlers import ActionHandler, handle_action, register_action_handler
 from meru.helpers import get_full_path_to_class
