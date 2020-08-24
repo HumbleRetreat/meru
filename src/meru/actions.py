@@ -1,5 +1,7 @@
 from dataclasses import dataclass, field
 import datetime
+from importlib import import_module
+import inspect
 from typing import List
 
 from meru.helpers import underscore
@@ -45,3 +47,15 @@ class RequireState(Action):
     topic = b'state'
 
     nodes: List[str]
+
+
+def discover_actions(path):
+    mod = import_module(path)
+
+    for name, cls in inspect.getmembers(mod, inspect.isclass):
+        if issubclass(cls, Action):
+            print(cls)
+
+
+def get_all_actions():
+    pass

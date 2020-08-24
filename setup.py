@@ -38,6 +38,7 @@ if __name__ == '__main__':
         },
         install_requires=[
             'ciso8601==2.1.3',
+            'pexpect==4.8.0',
             'pyzmq==19.0.0',
         ],
         zip_safe=True

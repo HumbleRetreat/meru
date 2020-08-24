@@ -3,9 +3,10 @@ import logging
 
 import zmq
 import zmq.asyncio
+from zmq.ssh import tunnel
 
 from meru.actions import Action
-from meru.constants import BIND_ADDRESS, BROKER_ADDRESS, COLLECTOR_PORT, PUBLISHER_PORT, STATE_PORT
+from meru.constants import BIND_ADDRESS, BROKER_ADDRESS, COLLECTOR_PORT, PUBLISHER_PORT, SSH_TUNNEL, STATE_PORT
 from meru.handlers import handle_action
 from meru.helpers import build_address
 from meru.serialization import decode_object, encode_object
@@ -69,7 +70,10 @@ class SubscriberSocket(MessagingSocket):
         super().__init__()
         connect_address = build_address(BROKER_ADDRESS, PUBLISHER_PORT)
         self._socket = self.ctx.socket(zmq.SUB)
-        self._socket.connect(connect_address)
+        if SSH_TUNNEL:
+            tunnel.tunnel_connection(self._socket, connect_address, SSH_TUNNEL)
+        else:
+            self._socket.connect(connect_address)
         self._socket.setsockopt_string(zmq.SUBSCRIBE, '')
         self._socket.setsockopt(zmq.LINGER, 0)
 
@@ -96,7 +100,10 @@ class PushSocket(MessagingSocket):
         connect_address = build_address(BROKER_ADDRESS, COLLECTOR_PORT)
         self._socket = self.ctx.socket(zmq.PUSH)
         self._socket.setsockopt(zmq.LINGER, 0)
-        self._socket.connect(connect_address)
+        if SSH_TUNNEL:
+            tunnel.tunnel_connection(self._socket, connect_address, SSH_TUNNEL)
+        else:
+            self._socket.connect(connect_address)
         logger.debug(f'Connected pusher to {connect_address}')
 
     async def push(self, action: Action):
@@ -130,7 +137,10 @@ class StateConsumerSocket(MessagingSocket):
         connect_address = build_address(BROKER_ADDRESS, STATE_PORT)
         self._socket = self.ctx.socket(zmq.DEALER)
         self._socket.setsockopt(zmq.LINGER, 0)
-        self._socket.connect(connect_address)
+        if SSH_TUNNEL:
+            tunnel.tunnel_connection(self._socket, connect_address, SSH_TUNNEL)
+        else:
+            self._socket.connect(connect_address)
         logger.debug(f'Connected state consumer to {connect_address}')
 
     async def request_state(self, action):
