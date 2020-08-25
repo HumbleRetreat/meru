@@ -65,7 +65,7 @@ async def handle_action(action):
 
     handler_args = map_calling_args(handler.calling_args, action)
 
-    logging.debug(f'Handling {action} with {handler.func}')
+    # logging.debug(f'Handling {action} with {handler.func}')
 
     if inspect.isasyncgenfunction(handler.func):
         async for action in handler.func(**handler_args):
