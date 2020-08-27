@@ -54,8 +54,7 @@ def discover_actions(path):
 
     for name, cls in inspect.getmembers(mod, inspect.isclass):
         if issubclass(cls, Action):
-            print(cls)
-
+            pass
 
 def get_all_actions():
     pass
