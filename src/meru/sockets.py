@@ -86,7 +86,10 @@ class SubscriberSocket(MessagingSocket):
                 yield response
 
     async def receive_encoded(self):
-        return await self._socket.recv_multipart()
+        try:
+            return await self._socket.recv_multipart()
+        except Exception as e:
+            print(e)
 
     async def receive_action(self):
         data = await self.receive_encoded()

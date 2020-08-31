@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
-import datetime
 from importlib import import_module
 import inspect
+import time
 from typing import List
 
 from meru.helpers import underscore
@@ -12,13 +12,13 @@ from meru.state import StateNode
 class Action:
     topic = b''
 
-    timestamp: datetime.datetime = field(
+    timestamp: float = field(
         init=False,
         repr=False,
     )
 
     def __post_init__(self):
-        self.timestamp = datetime.datetime.now()
+        self.timestamp = time.time()
 
     @classmethod
     def handler_name(cls):
@@ -55,6 +55,7 @@ def discover_actions(path):
     for name, cls in inspect.getmembers(mod, inspect.isclass):
         if issubclass(cls, Action):
             pass
+
 
 def get_all_actions():
     pass

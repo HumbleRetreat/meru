@@ -3,8 +3,6 @@ import inspect
 import json
 from pathlib import Path
 
-import ciso8601
-
 from meru.actions import Action
 from meru.exceptions import ActionException
 from meru.state import StateNode
@@ -37,8 +35,6 @@ def deserialize_objects(obj):
                     calling_args.append(obj[arg])
 
                 action = subclass(*calling_args)
-
-                action.timestamp = ciso8601.parse_datetime(obj['timestamp'])
 
                 return action
         raise ActionException(f'Action {obj["action_type"]} not found')
