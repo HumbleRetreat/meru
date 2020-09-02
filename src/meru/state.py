@@ -1,7 +1,6 @@
 import logging
-
+from collections import defaultdict
 from meru.helpers import underscore
-
 
 logger = logging.getLogger('meru.state')
 
@@ -50,7 +49,13 @@ class StateNode(metaclass=StateNodeMeta):
         fields = kwargs.get('fields', None)
         if fields:
             for key, value in fields.items():
-                setattr(self, key, value)
+                attr = getattr(self, key)
+                if isinstance(attr, defaultdict):
+                    dd_value = attr
+                    dd_value.update(value)
+                    setattr(self, key, dd_value)
+                else:
+                    setattr(self, key, value)
 
     def process_action(self, action):
         expected_handler = 'handle_' + underscore(action.__class__.__name__)
