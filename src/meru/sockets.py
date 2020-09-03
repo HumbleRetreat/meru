@@ -41,8 +41,8 @@ class PublisherSocket(MessagingSocket):
         logger.debug(f'Bound publisher to {address}')
 
     async def publish(self, action: Action):
-        logger.debug('Publishing %s', action)
-        logger.info('Got %s', action.__class__.__name__)
+        # logger.info('Publishing %s', action)
+        # logger.info('Got %s', action.__class__.__name__)
         data = [action.topic, encode_object(action)]
         await self._socket.send_multipart(data)
 
@@ -61,7 +61,7 @@ class CollectorSocket(MessagingSocket):
             data = await self._socket.recv_multipart()
             _, action_data = data
             action = decode_object(action_data)
-            logger.debug('Collected %s', action)
+            # logger.debug('Collected %s', action)
             return action
 
 
