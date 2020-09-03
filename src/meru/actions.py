@@ -49,13 +49,20 @@ class RequireState(Action):
     nodes: List[str]
 
 
+_all_actions = {}
+
+
 def discover_actions(path):
     mod = import_module(path)
 
     for name, cls in inspect.getmembers(mod, inspect.isclass):
         if issubclass(cls, Action):
-            pass
+            _all_actions[cls.__name__] = cls
 
 
 def get_all_actions():
-    pass
+    return _all_actions
+
+
+def get_all_actions_names():
+    return _all_actions.keys()
