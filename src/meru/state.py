@@ -54,6 +54,8 @@ class StateNode(metaclass=StateNodeMeta):
                     dd_value = attr
                     dd_value.update(value)
                     setattr(self, key, dd_value)
+                elif isinstance(attr, set):
+                    setattr(self, key, set(value))
                 else:
                     setattr(self, key, value)
 

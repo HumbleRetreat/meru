@@ -15,6 +15,8 @@ def serialize_objects(obj):
         data = obj.isoformat()
     elif isinstance(obj, Path):
         data = str(obj)
+    elif isinstance(obj, set):
+        data = list(obj)
     else:
         data = obj.__dict__
 
