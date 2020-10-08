@@ -6,6 +6,7 @@ from pathlib import Path
 from meru.actions import Action
 from meru.exceptions import ActionException
 from meru.state import StateNode
+from meru.types import MeruObject
 
 
 def serialize_objects(obj):
@@ -53,10 +54,26 @@ def deserialize_objects(obj):
                 return state
         raise ActionException(f'StateNode {obj["state_type"]} not found')
 
+    if 'object_type' in obj.keys():
+        for subclass in MeruObject.__subclasses__():
+            if subclass.__name__ == obj['object_type']:
+                calling_args = []
+                args = inspect.getfullargspec(subclass.__init__)
+
+                for arg in args.args:
+                    if arg == 'self':
+                        continue
+
+                    calling_args.append(obj[arg])
+
+                custom_object = subclass(*calling_args)
+                return custom_object
+        raise ActionException(f'MeruObject {obj["object_type"]} not found.')
+
     return obj
 
 
-def encode_object(action: Action):
+def encode_object(action: any):
     encoded_object = json.dumps(action, default=serialize_objects).encode()
     return encoded_object
 
