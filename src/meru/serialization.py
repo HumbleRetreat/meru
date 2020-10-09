@@ -33,7 +33,7 @@ def deserialize_objects(obj):
             calling_args = [obj[arg] for arg in init_args]
             action = subclass(*calling_args)
 
-            # Force timestamp to be added correctly
+            # Force timestamp to be added correctly to Actions.
             # Timestamp can not be found with getfullargsspec, since
             # it can not be in __init__.
             # see: https://bugs.python.org/issue36077
@@ -44,15 +44,15 @@ def deserialize_objects(obj):
         raise ActionException(f'Object {obj["object_type"]} not found.')
 
     if 'state_type' in obj.keys():
-        for subclass in StateNode.__subclasses__():
-            if subclass.__name__ == obj['state_type']:
-                fields = {}
-                for field in subclass._fields.keys():
-                    fields[field] = obj[field]
+        subclass = get_subclasses(StateNode)[obj['state_type']]
+        if subclass:
+            fields = {}
+            for field in subclass._fields.keys():
+                fields[field] = obj[field]
 
-                state = subclass(fields=fields)
+            state = subclass(fields=fields)
 
-                return state
+            return state
         raise ActionException(f'StateNode {obj["state_type"]} not found')
 
     return obj
