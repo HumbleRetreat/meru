@@ -3,6 +3,7 @@ import time
 
 from meru.actions import Action
 from meru.serialization import decode_object, encode_object
+from meru.state import StateField, StateNode
 
 
 @dataclass
@@ -10,6 +11,11 @@ class DummyAction(Action):
     str_field: str
     int_field: int
     dict_field: dict
+
+
+class DummyState(StateNode):
+    string_state = StateField('some_string')
+    int_state = StateField(666)
 
 
 class MyTimer:
@@ -26,8 +32,15 @@ class MyTimer:
         print(f'The function "{self.name}" took {runtime} seconds to complete')
 
 
-def benchmark_encoding():
+def benchmark_action_decoding():
     res = encode_object(DummyAction('some_random_String', 123, {'wtf': 123, 'abc': 'def'}))
+
+    for _ in range(10_000_000):
+        decode_object(res)
+
+
+def benchmark_state_decoding():
+    res = encode_object(DummyState())
 
     for _ in range(100_000):
         decode_object(res)
@@ -35,4 +48,4 @@ def benchmark_encoding():
 
 if __name__ == '__main__':
     with MyTimer('benchmark_encoding'):
-        benchmark_encoding()
+        benchmark_state_decoding()
