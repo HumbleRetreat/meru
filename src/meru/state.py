@@ -1,6 +1,10 @@
+from dataclasses import dataclass, field
 import logging
 from collections import defaultdict
+from typing import List
+
 from meru.helpers import underscore
+from meru.types import MeruObject
 
 logger = logging.getLogger('meru.state')
 
