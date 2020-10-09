@@ -6,10 +6,11 @@ from typing import List
 
 from meru.helpers import underscore
 from meru.state import StateNode
+from meru.types import MeruObject
 
 
 @dataclass
-class Action:
+class Action(MeruObject):
     topic = b''
 
     timestamp: float = field(
@@ -24,15 +25,6 @@ class Action:
     def handler_name(cls):
         cls_name = cls.__name__
         return 'handle_' + underscore(cls_name)
-
-    @property
-    def action_type(self) -> str:
-        return self.__class__.__name__
-
-    def to_dict(self):
-        data = self.__dict__
-        data['action_type'] = self.action_type
-        return data
 
 
 @dataclass

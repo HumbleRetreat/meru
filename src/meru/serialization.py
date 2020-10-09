@@ -1,10 +1,10 @@
 import datetime
-import inspect
 import json
 from pathlib import Path
 
 from meru.actions import Action
 from meru.exceptions import ActionException
+from meru.helpers import get_class_init_args, get_subclasses
 from meru.state import StateNode
 from meru.types import MeruObject
 
@@ -25,22 +25,23 @@ def serialize_objects(obj):
 
 
 def deserialize_objects(obj):
-    if 'action_type' in obj.keys():
-        for subclass in Action.__subclasses__():
-            if subclass.__name__ == obj['action_type']:
-                calling_args = []
-                args = inspect.getfullargspec(subclass.__init__)
+    if 'object_type' in obj.keys():
+        subclass = get_subclasses(MeruObject)[obj['object_type']]
 
-                for arg in args.args:
-                    if arg == 'self':
-                        continue
+        if subclass:
+            init_args = get_class_init_args(subclass)
+            calling_args = [obj[arg] for arg in init_args]
+            action = subclass(*calling_args)
 
-                    calling_args.append(obj[arg])
+            # Force timestamp to be added correctly
+            # Timestamp can not be found with getfullargsspec, since
+            # it can not be in __init__.
+            # see: https://bugs.python.org/issue36077
+            if isinstance(action, Action):
+                action.timestamp = obj['timestamp']
 
-                action = subclass(*calling_args)
-
-                return action
-        raise ActionException(f'Action {obj["action_type"]} not found')
+            return action
+        raise ActionException(f'Object {obj["object_type"]} not found.')
 
     if 'state_type' in obj.keys():
         for subclass in StateNode.__subclasses__():
@@ -53,22 +54,6 @@ def deserialize_objects(obj):
 
                 return state
         raise ActionException(f'StateNode {obj["state_type"]} not found')
-
-    if 'object_type' in obj.keys():
-        for subclass in MeruObject.__subclasses__():
-            if subclass.__name__ == obj['object_type']:
-                calling_args = []
-                args = inspect.getfullargspec(subclass.__init__)
-
-                for arg in args.args:
-                    if arg == 'self':
-                        continue
-
-                    calling_args.append(obj[arg])
-
-                custom_object = subclass(*calling_args)
-                return custom_object
-        raise ActionException(f'MeruObject {obj["object_type"]} not found.')
 
     return obj
 
