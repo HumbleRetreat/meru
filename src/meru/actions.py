@@ -1,30 +1,9 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from importlib import import_module
 import inspect
-import time
 from typing import List
 
-from meru.helpers import underscore
-from meru.state import StateNode
-from meru.types import MeruObject
-
-
-@dataclass
-class Action(MeruObject):
-    topic = b''
-
-    timestamp: float = field(
-        init=False,
-        repr=False,
-    )
-
-    def __post_init__(self):
-        self.timestamp = time.time()
-
-    @classmethod
-    def handler_name(cls):
-        cls_name = cls.__name__
-        return 'handle_' + underscore(cls_name)
+from meru.base import Action, StateNode
 
 
 @dataclass

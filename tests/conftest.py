@@ -1,12 +1,32 @@
 import asyncio
+from dataclasses import dataclass, field
 
 import pytest
 
-from meru.actions import Action
+from meru.base import Action, MeruObject, StateNode
 
 
+@dataclass
+class DummyObject(MeruObject):
+    pass
+
+
+@dataclass
 class DummyAction(Action):
     pass
+
+
+@dataclass
+class DummyActionWithField(Action):
+    field: str
+
+
+@dataclass
+class DummyState(StateNode):
+    state_field: str = field(default='')
+
+    def handle_dummy_action(self, action: DummyAction):
+        self.state_field = action.field
 
 
 @pytest.yield_fixture()
@@ -24,5 +44,20 @@ def wait():
 
 
 @pytest.fixture()
+def dummy_object():
+    return DummyObject
+
+
+@pytest.fixture()
 def dummy_action():
     return DummyAction
+
+
+@pytest.fixture()
+def dummy_action_with_field():
+    return DummyActionWithField
+
+
+@pytest.fixture()
+def dummy_state_cls():
+    return DummyState

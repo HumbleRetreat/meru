@@ -1,16 +1,22 @@
 import inspect
 import logging
 from collections import namedtuple
+from typing import Type
 
 from meru.actions import Action, RequireState
-from meru.helpers import get_full_path_to_class, inspect_action_handler
-from meru.state import StateNode
+from meru.helpers import get_full_path_to_class
+from meru.base import StateNode
+from meru.introspection import discover_state_action_handlers, inspect_action_handler
+from meru.types import StateModelType
 
 HANDLERS = dict()
+STATE_ACTION_HANDLERS = dict()
 STATES = dict()
-STATE_HANDLER_MAPPING = dict()
+
 
 ActionHandler = namedtuple('ActionHandler', 'func calling_args')
+
+logger = logging.getLogger('meru.state')
 
 
 def register_action_handler(func):
@@ -26,10 +32,12 @@ def register_action_handler(func):
     return func
 
 
-def register_state(state_cls):
-    cls_path = get_full_path_to_class(state_cls)
+def register_state(state_cls: Type[StateNode]):
     if state_cls not in STATES:
-        STATES[cls_path] = state_cls()
+        STATES[state_cls] = state_cls()
+        STATE_ACTION_HANDLERS[state_cls] = discover_state_action_handlers(STATES[state_cls])
+    else:
+        logger.warning(f'State {state_cls.__name__} has already been registered.')
 
 
 def get_all_states():
@@ -41,7 +49,7 @@ def map_calling_args(calling_args: dict, action):
 
     for arg, cls in calling_args.items():
         if issubclass(cls, StateNode):
-            args[arg] = STATES[get_full_path_to_class(cls)]
+            args[arg] = STATES[cls]
 
         if issubclass(cls, Action):
             args[arg] = action
@@ -50,8 +58,9 @@ def map_calling_args(calling_args: dict, action):
 
 
 async def update_state(action: Action):
-    for state in STATES.values():
-        state.process_action(action)
+    if action.__class__ in STATE_ACTION_HANDLERS:
+        for method in STATE_ACTION_HANDLERS[action.__class__]:
+            method(action)
 
 
 async def handle_action(action):
@@ -65,8 +74,6 @@ async def handle_action(action):
 
     handler_args = map_calling_args(handler.calling_args, action)
 
-    # logging.debug(f'Handling {action} with {handler.func}')
-
     if inspect.isasyncgenfunction(handler.func):
         async for action in handler.func(**handler_args):
             yield action
@@ -74,8 +81,8 @@ async def handle_action(action):
         yield await handler.func(**handler_args)
 
 
-def get_state(state_cls):
-    return STATES[get_full_path_to_class(state_cls)]
+def get_state(state_cls: StateModelType) -> StateModelType:
+    return STATES[state_cls]
 
 
 async def request_state():

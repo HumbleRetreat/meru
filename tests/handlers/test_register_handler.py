@@ -3,14 +3,13 @@ from unittest.mock import create_autospec
 import pytest
 
 from meru.handlers import ActionHandler, handle_action, register_action_handler
-from meru.helpers import get_full_path_to_class
 
 
-def test_register_handler(mocker, dummy_action, dummy_state):
+def test_register_handler(mocker, dummy_action, dummy_state_cls):
     handlers = mocker.patch('meru.handlers.HANDLERS', {})
     states = mocker.patch('meru.handlers.STATES', {})
 
-    def dummy_handler(action: dummy_action, state: dummy_state):
+    def dummy_handler(action: dummy_action, state: dummy_state_cls):
         pass
 
     register_action_handler(dummy_handler)
@@ -19,20 +18,20 @@ def test_register_handler(mocker, dummy_action, dummy_state):
     assert dummy_action in handlers
     assert handlers[dummy_action] == ActionHandler(dummy_handler, {
         'action': dummy_action,
-        'state': dummy_state,
+        'state': dummy_state_cls,
     })
 
     assert len(states) == 1
-    assert get_full_path_to_class(dummy_state) in states
+    assert dummy_state_cls in states
 
 
 @pytest.mark.asyncio
 @pytest.mark.freeze_time
-async def test_call_handler(mocker, dummy_action, dummy_state):
+async def test_call_handler(mocker, dummy_action, dummy_state_cls):
     mocker.patch('meru.handlers.HANDLERS', {})
     states = mocker.patch('meru.handlers.STATES', {})
 
-    async def dummy_handler(action: dummy_action, state: dummy_state):
+    async def dummy_handler(action: dummy_action, state: dummy_state_cls):
         pass
 
     stub = create_autospec(dummy_handler)
@@ -42,5 +41,5 @@ async def test_call_handler(mocker, dummy_action, dummy_state):
 
     stub.assert_awaited_once_with(
         action=dummy_action(),
-        state=states[get_full_path_to_class(dummy_state)],
+        state=states[dummy_state_cls],
     )

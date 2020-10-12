@@ -1,25 +1,38 @@
-from dataclasses import dataclass
+from freezegun import freeze_time
 
 from meru.serialization import decode_object, encode_object
-from meru.types import MeruObject
+
+encoded_object = b'{"object_type": "DummyObject"}'
+encoded_action = b'{"timestamp": 1495584000.0, "object_type": "DummyAction"}'
 
 
-@dataclass
-class MeruObjectToTest(MeruObject):
-    field: str
-
-
-encoded_object = b'{"field": "value", "object_type": "MeruObjectToTest"}'
-
-
-def test_encode_custom_object():
-    obj = MeruObjectToTest('value')
+def test_encode_custom_object(dummy_object):
+    obj = dummy_object()
     res = encode_object(obj)
 
     assert res == encoded_object
 
 
-def test_decode_custom_object():
+def test_decode_custom_object(dummy_object):
     custom_object = decode_object(encoded_object)
 
-    assert custom_object == MeruObjectToTest(field='value')
+    assert custom_object == dummy_object()
+
+
+def test_encode_action(dummy_action):
+    with freeze_time('2017-05-24'):
+        action = dummy_action()
+
+    result = encode_object(action)
+    assert result == encoded_action
+
+
+def test_decode_action(dummy_action):
+    action = decode_object(encoded_action)
+
+    with freeze_time('2017-05-24'):
+        expected_action = dummy_action()
+
+    assert action.object_type == expected_action.object_type
+    assert action.timestamp == expected_action.timestamp
+    assert action.topic == action.topic

@@ -1,10 +1,10 @@
 import pytest
 
-from meru.helpers import inspect_action_handler
+from meru.introspection import inspect_action_handler
 
 
-def test_successful_inspection_action_and_state(dummy_action, dummy_state):
-    def handle_dummy_action(action: dummy_action, files: dummy_state):
+def test_successful_inspection_action_and_state(dummy_action, dummy_state_cls):
+    def handle_dummy_action(action: dummy_action, files: dummy_state_cls):
         pass
 
     action, calling_args = inspect_action_handler(handle_dummy_action)
@@ -12,7 +12,7 @@ def test_successful_inspection_action_and_state(dummy_action, dummy_state):
     assert len(calling_args) == 2
     assert action == dummy_action
     assert calling_args['action'] == dummy_action
-    assert calling_args['files'] == dummy_state
+    assert calling_args['files'] == dummy_state_cls
 
 
 def test_successful_inspection_only_action(dummy_action):
@@ -26,8 +26,8 @@ def test_successful_inspection_only_action(dummy_action):
     assert calling_args['action'] == dummy_action
 
 
-def test_successful_inspection_multiple_states(dummy_action, dummy_state):
-    def handle_dummy_action(action: dummy_action, state1: dummy_state, state2: dummy_state):
+def test_successful_inspection_multiple_states(dummy_action, dummy_state_cls):
+    def handle_dummy_action(action: dummy_action, state1: dummy_state_cls, state2: dummy_state_cls):
         pass
 
     action, calling_args = inspect_action_handler(handle_dummy_action)
@@ -35,8 +35,8 @@ def test_successful_inspection_multiple_states(dummy_action, dummy_state):
     assert len(calling_args) == 3
     assert action == dummy_action
     assert calling_args['action'] == dummy_action
-    assert calling_args['state1'] == dummy_state
-    assert calling_args['state2'] == dummy_state
+    assert calling_args['state1'] == dummy_state_cls
+    assert calling_args['state2'] == dummy_state_cls
 
 
 def test_failed_inspection_too_many_actions(dummy_action):

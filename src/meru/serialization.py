@@ -1,11 +1,12 @@
 import datetime
 import json
 from pathlib import Path
+from typing import Type
 
 from meru.actions import Action
 from meru.exceptions import ActionException
-from meru.helpers import get_class_init_args, get_subclasses
-from meru.types import MeruObject
+from meru.introspection import get_class_init_args, get_subclasses
+from meru.base import MeruObject
 
 
 def serialize_objects(obj):
@@ -50,6 +51,6 @@ def encode_object(action: MeruObject):
     return encoded_object
 
 
-def decode_object(state_data) -> MeruObject:
+def decode_object(state_data) -> Type[MeruObject]:
     data = json.loads(state_data, object_hook=deserialize_objects)
     return data

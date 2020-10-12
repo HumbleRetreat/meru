@@ -35,30 +35,8 @@ class SomeState(NewStateModel):
         pass
 
 
-def discover_action_handlers(state_node: Type[NewStateModel]):
-    handlers = defaultdict(lambda: [])
-
-    b = inspect.getmembers(state_node)
-    for (name, foo) in b:
-        if inspect.ismethod(foo):
-            signature = inspect.signature(foo)
-            for param in signature.parameters.values():
-                if get_origin(param.annotation) is Union:
-                    for t in get_args(param.annotation):
-                        handlers[t].append(foo)
-                elif issubclass(param.annotation, Action):
-                    handlers[param.annotation].append(foo)
-    return handlers
-
-
 states = {}
 _handlers = {}
-
-
-def register_state(foo: Type[NewStateModel]):
-    global _handlers, states
-    states[foo] = foo()
-    _handlers = discover_action_handlers(states[foo])
 
 
 def update_state(action: Action):
