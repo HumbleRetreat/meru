@@ -1,4 +1,5 @@
 import asyncio
+from collections import defaultdict
 from dataclasses import dataclass, field
 
 import pytest
@@ -25,8 +26,18 @@ class DummyActionWithField(Action):
 class DummyState(StateNode):
     state_field: str = field(default='')
 
-    def handle_dummy_action(self, action: DummyAction):
+    def handle_dummy_action(self, action: DummyActionWithField):
         self.state_field = action.field
+
+
+@pytest.fixture(autouse=True, scope='function')
+def mocked_state_action_handlers(mocker):
+    return mocker.patch('meru.handlers.STATE_ACTION_HANDLERS', defaultdict(lambda: list()))
+
+
+@pytest.fixture(autouse=True, scope='function')
+def mocked_states(mocker):
+    return mocker.patch('meru.handlers.STATES', {})
 
 
 @pytest.yield_fixture()

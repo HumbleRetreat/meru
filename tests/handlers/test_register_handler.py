@@ -5,9 +5,8 @@ import pytest
 from meru.handlers import ActionHandler, handle_action, register_action_handler
 
 
-def test_register_handler(mocker, dummy_action, dummy_state_cls):
+def test_register_handler(mocker, dummy_action, dummy_state_cls, mocked_states):
     handlers = mocker.patch('meru.handlers.HANDLERS', {})
-    states = mocker.patch('meru.handlers.STATES', {})
 
     def dummy_handler(action: dummy_action, state: dummy_state_cls):
         pass
@@ -21,15 +20,14 @@ def test_register_handler(mocker, dummy_action, dummy_state_cls):
         'state': dummy_state_cls,
     })
 
-    assert len(states) == 1
-    assert dummy_state_cls in states
+    assert len(mocked_states) == 1
+    assert dummy_state_cls in mocked_states
 
 
 @pytest.mark.asyncio
 @pytest.mark.freeze_time
-async def test_call_handler(mocker, dummy_action, dummy_state_cls):
+async def test_call_handler(mocker, dummy_action, dummy_state_cls, mocked_states):
     mocker.patch('meru.handlers.HANDLERS', {})
-    states = mocker.patch('meru.handlers.STATES', {})
 
     async def dummy_handler(action: dummy_action, state: dummy_state_cls):
         pass
@@ -41,5 +39,5 @@ async def test_call_handler(mocker, dummy_action, dummy_state_cls):
 
     stub.assert_awaited_once_with(
         action=dummy_action(),
-        state=states[dummy_state_cls],
+        state=mocked_states[dummy_state_cls],
     )

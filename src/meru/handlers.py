@@ -1,6 +1,6 @@
 import inspect
 import logging
-from collections import namedtuple
+from collections import defaultdict, namedtuple
 from typing import Type
 
 from meru.actions import Action, RequireState
@@ -10,7 +10,7 @@ from meru.introspection import discover_state_action_handlers, inspect_action_ha
 from meru.types import StateModelType
 
 HANDLERS = dict()
-STATE_ACTION_HANDLERS = dict()
+STATE_ACTION_HANDLERS = defaultdict(lambda: list())
 STATES = dict()
 
 
@@ -35,7 +35,8 @@ def register_action_handler(func):
 def register_state(state_cls: Type[StateNode]):
     if state_cls not in STATES:
         STATES[state_cls] = state_cls()
-        STATE_ACTION_HANDLERS[state_cls] = discover_state_action_handlers(STATES[state_cls])
+        for action, handlers in discover_state_action_handlers(STATES[state_cls]).items():
+            STATE_ACTION_HANDLERS[action] += handlers
     else:
         logger.warning(f'State {state_cls.__name__} has already been registered.')
 

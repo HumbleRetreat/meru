@@ -33,7 +33,3 @@ def discover_actions(path):
 
 def get_all_actions():
     return _all_actions
-
-
-def get_all_actions_names():
-    return _all_actions.keys()

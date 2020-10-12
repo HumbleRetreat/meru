@@ -12,12 +12,6 @@ from meru.base import MeruObject
 def serialize_objects(obj):
     if hasattr(obj, 'to_dict'):
         data = obj.to_dict()
-    elif isinstance(obj, (datetime.datetime, datetime.date)):
-        data = obj.isoformat()
-    elif isinstance(obj, Path):
-        data = str(obj)
-    elif isinstance(obj, set):
-        data = list(obj)
     else:
         data = obj.__dict__
 

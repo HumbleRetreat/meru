@@ -1,8 +1,6 @@
 from dataclasses import dataclass, field
 import time
 
-from meru.helpers import underscore
-
 
 @dataclass
 class MeruObject:
@@ -27,11 +25,6 @@ class Action(MeruObject):
 
     def __post_init__(self):
         self.timestamp = time.time()
-
-    @classmethod
-    def handler_name(cls):
-        cls_name = cls.__name__
-        return 'handle_' + underscore(cls_name)
 
 
 # pylint: disable=protected-access,too-few-public-methods,no-member
