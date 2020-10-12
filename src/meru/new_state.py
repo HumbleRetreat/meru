@@ -1,10 +1,13 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
 import inspect
-from typing import Type, Union, get_origin
+from typing import get_args, Type, TypeVar, Union, get_origin
 
 from meru.actions import Action
 from meru.types import MeruObject
+
+
+StateModelType = TypeVar('StateModelType')
 
 
 @dataclass
@@ -41,7 +44,8 @@ def discover_action_handlers(state_node: Type[NewStateModel]):
             signature = inspect.signature(foo)
             for param in signature.parameters.values():
                 if get_origin(param.annotation) is Union:
-                    pass
+                    for t in get_args(param.annotation):
+                        handlers[t].append(foo)
                 elif issubclass(param.annotation, Action):
                     handlers[param.annotation].append(foo)
     return handlers
@@ -63,7 +67,7 @@ def update_state(action: Action):
         method(action)
 
 
-def get_state(state_node):
+def get_state(state_node: StateModelType) -> StateModelType:
     global states
     a = states
     return states[state_node]
