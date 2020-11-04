@@ -7,7 +7,6 @@ from zmq.ssh import tunnel
 
 from meru.actions import Action
 from meru.constants import BIND_ADDRESS, BROKER_ADDRESS, COLLECTOR_PORT, PUBLISHER_PORT, SSH_TUNNEL, STATE_PORT
-from meru.handlers import handle_action
 from meru.helpers import build_address
 from meru.serialization import decode_object, encode_object
 
@@ -80,10 +79,10 @@ class SubscriberSocket(MessagingSocket):
         logger.debug(f'Connected subscriber to {connect_address}')
 
     async def handle_incoming_actions(self):
-        while True:
-            action = await self.receive_action()
-            async for response in handle_action(action):
-                yield response
+        from meru.handlers import handle_action
+        action = await self.receive_action()
+        async for response in handle_action(action):
+            yield response
 
     async def receive_encoded(self):
         try:
@@ -127,11 +126,10 @@ class StateManagerSocket(MessagingSocket):
         self._socket.send_multipart([identity, encode_object(action)])
 
     async def get_state_request(self):
-        while True:
-            data = await self._socket.recv_multipart()
-            identity, action_data = data
-            action = decode_object(action_data)
-            return identity, action
+        data = await self._socket.recv_multipart()
+        identity, action_data = data
+        action = decode_object(action_data)
+        return identity, action
 
 
 class StateConsumerSocket(MessagingSocket):

@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 import pytest
 
 from meru.base import Action, MeruObject, StateNode
+from meru.sockets import StateConsumerSocket, StateManagerSocket
 
 
 @dataclass
@@ -32,12 +33,12 @@ class DummyState(StateNode):
 
 @pytest.fixture(autouse=True, scope='function')
 def mocked_state_action_handlers(mocker):
-    return mocker.patch('meru.handlers.STATE_ACTION_HANDLERS', defaultdict(lambda: list()))
+    return mocker.patch('meru.state.STATE_ACTION_HANDLERS', defaultdict(lambda: list()))
 
 
 @pytest.fixture(autouse=True, scope='function')
 def mocked_states(mocker):
-    return mocker.patch('meru.handlers.STATES', {})
+    return mocker.patch('meru.state.STATES', {})
 
 
 @pytest.yield_fixture()
@@ -72,3 +73,17 @@ def dummy_action_with_field():
 @pytest.fixture()
 def dummy_state_cls():
     return DummyState
+
+
+@pytest.fixture()
+def state_manager():
+    socket = StateManagerSocket()
+    yield socket
+    socket.close()
+
+
+@pytest.fixture()
+def state_consumer():
+    socket = StateConsumerSocket()
+    yield socket
+    socket.close()

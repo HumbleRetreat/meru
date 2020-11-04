@@ -1,6 +1,9 @@
 import pytest
 
-from meru.sockets import CollectorSocket, PublisherSocket, PushSocket, SubscriberSocket
+from meru.actions import RequireState, StateUpdate
+from meru.sockets import CollectorSocket, PublisherSocket, PushSocket, StateConsumerSocket, StateManagerSocket, \
+    SubscriberSocket
+import meru.state
 
 
 @pytest.mark.asyncio
@@ -42,3 +45,18 @@ async def test_publisher_to_subscriber(dummy_action, wait):
     publisher.close()
     subscriber.close()
     await wait()
+
+
+@pytest.mark.asyncio
+@pytest.mark.freeze_time
+async def test_state_manager_to_state_consumer(state_manager, state_consumer, wait):
+    action = RequireState([])
+    await state_consumer.request_state(action)
+
+    identity, action = await state_manager.get_state_request()
+    action = StateUpdate([])
+    await state_manager.answer_state_request(identity, action)
+
+    state = await state_consumer.receive_state()
+
+    assert state == StateUpdate([])

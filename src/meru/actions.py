@@ -4,6 +4,7 @@ import inspect
 from typing import List
 
 from meru.base import Action, StateNode
+from meru.helpers import get_full_path_to_class
 
 
 @dataclass
@@ -18,6 +19,11 @@ class RequireState(Action):
     topic = b'state'
 
     nodes: List[str]
+
+    def to_dict(self):
+        sup = super().to_dict()
+        sup['nodes'] = [get_full_path_to_class(obj) for obj in sup['nodes']]
+        return sup
 
 
 _all_actions = {}

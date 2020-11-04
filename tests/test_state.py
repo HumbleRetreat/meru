@@ -2,8 +2,7 @@ import logging
 
 import pytest
 
-from meru.handlers import get_all_states, get_state, register_state, request_state, update_state
-from meru.sockets import StateConsumerSocket, StateManagerSocket
+from meru.state import answer_state_requests, get_all_states, get_state, register_state, request_state, update_state
 
 
 def test_register_state(dummy_action, dummy_state_cls, mocked_states, mocked_state_action_handlers):
@@ -49,3 +48,19 @@ async def test_update_state(dummy_state_cls, dummy_action_with_field):
     state = get_state(dummy_state_cls)
 
     assert state.state_field == 'some_field_value'
+
+
+@pytest.mark.asyncio
+async def test_state_request_cycle(event_loop, dummy_state_cls, wait):
+    register_state(dummy_state_cls)
+
+    task = event_loop.create_task(answer_state_requests())
+
+    await wait()
+
+    loaded_states = await request_state()
+
+    assert loaded_states == {dummy_state_cls: dummy_state_cls(state_field='')}
+
+    task.cancel()
+    await wait()
