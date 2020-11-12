@@ -70,8 +70,18 @@ def get_subclasses(base_cls):
 
 @lru_cache(maxsize=None)
 def get_class_init_args(cls):
+    """
+    Get the __init__ arguments from a given class and return their names and their types.
+
+    :param cls:
+    :return:
+    """
     args = inspect.getfullargspec(cls.__init__)
-    init_args = args.args[:]
-    init_args.remove('self')
+    init_args = {}
+
+    for arg in args.args[:]:
+        if arg == 'self':
+            continue
+        init_args[arg] = args.annotations[arg]
 
     return init_args

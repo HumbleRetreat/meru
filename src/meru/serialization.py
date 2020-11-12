@@ -1,4 +1,5 @@
 import datetime
+from enum import IntFlag
 import json
 from pathlib import Path
 
@@ -30,7 +31,7 @@ def deserialize_objects(obj):
 
         if subclass:
             init_args = get_class_init_args(subclass)
-            calling_args = [obj[arg] for arg in init_args]
+            calling_args = [arg_type(obj[arg]) for arg, arg_type in init_args.items()]
             action = subclass(*calling_args)
 
             # Force timestamp to be added correctly to Actions.
