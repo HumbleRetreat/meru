@@ -32,6 +32,9 @@ def deserialize_objects(obj):
         if subclass:
             calling_args = []
             for field in fields(subclass):
+                if not field.init:
+                    continue
+
                 cast_to = field.metadata.get('cast', None)
                 if cast_to:
                     calling_args.append(cast_to(obj[field.name]))
