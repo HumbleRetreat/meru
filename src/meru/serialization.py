@@ -1,11 +1,10 @@
 import datetime
-from enum import IntFlag
 import json
 from pathlib import Path
 
 from meru.actions import Action
 from meru.exceptions import ActionException
-from meru.helpers import get_class_init_args, get_subclasses
+from meru.helpers import get_subclasses
 from meru.state import StateNode
 from meru.types import MeruObject
 
@@ -26,12 +25,18 @@ def serialize_objects(obj):
 
 
 def deserialize_objects(obj):
+    from dataclasses import fields
     if 'object_type' in obj.keys():
         subclass = get_subclasses(MeruObject)[obj['object_type']]
 
         if subclass:
-            init_args = get_class_init_args(subclass)
-            calling_args = [arg_type(obj[arg]) for arg, arg_type in init_args.items()]
+            calling_args = []
+            for field in fields(subclass):
+                cast_to = field.metadata.get('cast', None)
+                if cast_to:
+                    calling_args.append(cast_to(obj[field.name]))
+                else:
+                    calling_args.append(obj[field.name])
             action = subclass(*calling_args)
 
             # Force timestamp to be added correctly to Actions.
