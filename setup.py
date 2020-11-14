@@ -37,6 +37,7 @@ if __name__ == '__main__':
             ]
         },
         install_requires=[
+            'pexpect==4.8.0',
             'pyzmq==19.0.0',
         ],
         zip_safe=True
