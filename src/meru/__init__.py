@@ -4,7 +4,9 @@ import os
 import signal
 import traceback
 from importlib import import_module
+from typing import Callable
 
+from meru.exceptions import PingTimeout
 from meru.sockets import MessagingSocket
 
 
@@ -30,14 +32,19 @@ async def shutdown(loop, process_signal=None):
 
 def handle_exception(loop, context):
     exception = context.get("exception", context["message"])
-    logging.error(f"Caught exception: {exception}")
-    # Note: Find a way to properly log the traceback
-    traceback.print_tb(exception.__traceback__)
-    logging.info("Shutting down...")
+
+    if isinstance(exception, PingTimeout):
+        logging.error('Ping timeout with broker... shutting down')
+    else:
+        logging.error(f"Caught exception: {exception}")
+        # Note: Find a way to properly log the traceback
+        traceback.print_tb(exception.__traceback__)
+        logging.info("Shutting down...")
+
     asyncio.create_task(shutdown(loop))
 
 
-def import_runner(full_path):
+def import_runner(full_path) -> Callable:
     mod_path = '.'.join(full_path.split('.')[:-1])
     func = full_path.split('.')[-1]
 
@@ -47,12 +54,16 @@ def import_runner(full_path):
 
 def run_process(entry_point_path):
     entry_point = import_runner(entry_point_path)
+    os.environ['MERU_PROCESS'] = entry_point.__name__
     loop = asyncio.get_event_loop()
 
     signals = (signal.SIGHUP, signal.SIGTERM, signal.SIGINT)
     for sig in signals:
         loop.add_signal_handler(
-            sig, lambda s=sig: asyncio.create_task(shutdown(loop, process_signal=s)))
+            sig, lambda s=sig: asyncio.create_task(
+                shutdown(loop, process_signal=s)
+            )
+        )
 
     loop.set_exception_handler(handle_exception)
     loop.create_task(entry_point())

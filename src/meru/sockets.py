@@ -1,6 +1,9 @@
 import asyncio
 import logging
+import os
+import socket
 
+import psutil
 import zmq
 import zmq.asyncio
 from zmq.ssh import tunnel
@@ -12,6 +15,10 @@ from meru.helpers import build_address
 from meru.serialization import decode_object, encode_object
 
 logger = logging.getLogger('meru.socket')
+
+
+THIS_PROCESS = psutil.Process(os.getpid())
+THIS_CMD_ARGS = THIS_PROCESS.cmdline()
 
 
 class MessagingSocket:
@@ -41,8 +48,6 @@ class PublisherSocket(MessagingSocket):
         logger.debug(f'Bound publisher to {address}')
 
     async def publish(self, action: Action):
-        # logger.info('Publishing %s', action)
-        # logger.info('Got %s', action.__class__.__name__)
         data = [action.topic, encode_object(action)]
         await self._socket.send_multipart(data)
 
@@ -123,7 +128,10 @@ class StateManagerSocket(MessagingSocket):
         logger.debug(f'Bound state manager to {bind_address}')
 
     async def answer_state_request(self, identity, action):
-        logger.debug(f'Sending state update to {identity}')
+        logger.debug(f'Sending state update to {identity.decode()}')
+        self._socket.send_multipart([identity, encode_object(action)])
+
+    async def send(self, identity, action):
         self._socket.send_multipart([identity, encode_object(action)])
 
     async def get_state_request(self):
@@ -137,19 +145,29 @@ class StateManagerSocket(MessagingSocket):
 class StateConsumerSocket(MessagingSocket):
     def __init__(self):
         super().__init__()
+
         connect_address = build_address(BROKER_ADDRESS, STATE_PORT)
         self._socket = self.ctx.socket(zmq.DEALER)
         self._socket.setsockopt(zmq.LINGER, 0)
+        self._socket.setsockopt(zmq.RCVTIMEO, 1000)
+
+        process_name = os.environ.get('MERU_PROCESS', None)
+
+        if process_name:
+            hostname = socket.gethostname()
+            self._socket.setsockopt_string(zmq.IDENTITY, f'{hostname}-{process_name}')
+
         if SSH_TUNNEL:
             tunnel.tunnel_connection(self._socket, connect_address, SSH_TUNNEL)
         else:
             self._socket.connect(connect_address)
+
         logger.debug(f'Connected state consumer to {connect_address}')
 
-    async def request_state(self, action):
+    async def send(self, action):
         await self._socket.send_multipart([encode_object(action)])
 
-    async def receive_state(self):
+    async def receive(self):
         data = await self._socket.recv_multipart()
         action = decode_object(data[0])
         return action

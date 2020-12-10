@@ -1,8 +1,12 @@
+import asyncio
 import inspect
 import logging
 from collections import namedtuple
 
-from meru.actions import Action, RequireState
+from zmq import Again
+
+from meru.actions import Action, Ping, RequireState
+from meru.exceptions import PingTimeout
 from meru.helpers import get_full_path_to_class, inspect_action_handler
 from meru.state import StateNode
 
@@ -65,8 +69,6 @@ async def handle_action(action):
 
     handler_args = map_calling_args(handler.calling_args, action)
 
-    # logging.debug(f'Handling {action} with {handler.func}')
-
     if inspect.isasyncgenfunction(handler.func):
         async for action in handler.func(**handler_args):
             yield action
@@ -87,10 +89,28 @@ async def request_state():
     logging.debug(states_to_request)
 
     action = RequireState(states_to_request)
-    await state_consumer.request_state(action)
-    state = await state_consumer.receive_state()
+    await state_consumer.send(action)
+    state = await state_consumer.receive()
     for node in state.nodes:
         class_path = get_full_path_to_class(node.__class__)
         STATES[class_path] = node
 
+    state_consumer.close()
+
     return STATES
+
+
+async def ping_pong():
+    from meru.sockets import StateConsumerSocket
+    state_consumer = StateConsumerSocket()
+
+    while True:
+        action = Ping()
+        await state_consumer.send(action)
+
+        try:
+            await state_consumer.receive()
+        except Again:
+            raise PingTimeout()
+
+        await asyncio.sleep(10)

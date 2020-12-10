@@ -35,6 +35,16 @@ class StateUpdate(Action):
 
 
 @dataclass
+class Ping(Action):
+    pass
+
+
+@dataclass
+class Pong(Action):
+    pass
+
+
+@dataclass
 class RequireState(Action):
     topic = b'state'
 
