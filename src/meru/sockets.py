@@ -3,7 +3,6 @@ import logging
 import os
 import socket
 
-import psutil
 import zmq
 import zmq.asyncio
 from zmq.ssh import tunnel
@@ -15,10 +14,6 @@ from meru.helpers import build_address
 from meru.serialization import decode_object, encode_object
 
 logger = logging.getLogger('meru.socket')
-
-
-THIS_PROCESS = psutil.Process(os.getpid())
-THIS_CMD_ARGS = THIS_PROCESS.cmdline()
 
 
 class MessagingSocket:
