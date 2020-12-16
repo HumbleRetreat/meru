@@ -111,6 +111,6 @@ async def ping_pong():
         try:
             await state_consumer.receive()
         except Again:
-            raise PingTimeout()
+            raise PingTimeout() from None
 
         await asyncio.sleep(10)
