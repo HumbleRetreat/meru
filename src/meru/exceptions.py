@@ -4,3 +4,7 @@ class ActionException(Exception):
 
 class PingTimeout(Exception):
     pass
+
+
+class MeruException(Exception):
+    pass

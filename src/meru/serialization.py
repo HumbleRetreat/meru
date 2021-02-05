@@ -1,8 +1,10 @@
 import datetime
 import json
+import pickle
 from pathlib import Path
 
 from meru.actions import Action
+from meru.constants import MERU_SERIALIZATION_METHOD
 from meru.exceptions import ActionException
 from meru.helpers import get_subclasses
 from meru.state import StateNode
@@ -68,10 +70,17 @@ def deserialize_objects(obj):
 
 
 def encode_object(action: any):
-    encoded_object = json.dumps(action, default=serialize_objects).encode()
+    if MERU_SERIALIZATION_METHOD == 'json':
+        encoded_object = json.dumps(action, default=serialize_objects).encode()
+    else:
+        encoded_object = pickle.dumps(action)
+
     return encoded_object
 
 
 def decode_object(state_data):
-    data = json.loads(state_data, object_hook=deserialize_objects)
+    if MERU_SERIALIZATION_METHOD == 'json':
+        data = json.loads(state_data, object_hook=deserialize_objects)
+    else:
+        data = pickle.loads(state_data)
     return data
