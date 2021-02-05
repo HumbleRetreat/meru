@@ -144,7 +144,7 @@ class StateConsumerSocket(MessagingSocket):
         connect_address = build_address(BROKER_ADDRESS, STATE_PORT)
         self._socket = self.ctx.socket(zmq.DEALER)
         self._socket.setsockopt(zmq.LINGER, 0)
-        self._socket.setsockopt(zmq.RCVTIMEO, 1000)
+        self._socket.setsockopt(zmq.RCVTIMEO, 2000)
 
         process_name = os.environ.get('MERU_PROCESS', None)
 
