@@ -124,10 +124,10 @@ class StateManagerSocket(MessagingSocket):
 
     async def answer_state_request(self, identity, action):
         logger.debug(f'Sending state update to {identity.decode()}')
-        self._socket.send_multipart([identity, encode_object(action)])
+        await self._socket.send_multipart([identity, encode_object(action)])
 
     async def send(self, identity, action):
-        self._socket.send_multipart([identity, encode_object(action)])
+        await self._socket.send_multipart([identity, encode_object(action)])
 
     async def get_state_request(self):
         while True:

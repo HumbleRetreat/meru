@@ -12,6 +12,7 @@ STATE_PORT = '24053'
 SSH_TUNNEL = os.environ.get('SSH_TUNNEL', False)
 
 MERU_SERIALIZATION_METHOD = os.environ.get('MERU_SERIALIZATION_METHOD', 'json')
+MERU_RECEIVE_TIMEOUT = os.environ.get('MERU_RECEIVE_TIMEOUT', 4000)
 
 if MERU_SERIALIZATION_METHOD not in ('json', 'pickle'):
     raise MeruException(
