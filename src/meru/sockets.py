@@ -8,7 +8,8 @@ import zmq.asyncio
 from zmq.ssh import tunnel
 
 from meru.actions import Action
-from meru.constants import BIND_ADDRESS, BROKER_ADDRESS, COLLECTOR_PORT, PUBLISHER_PORT, SSH_TUNNEL, STATE_PORT
+from meru.constants import BIND_ADDRESS, BROKER_ADDRESS, COLLECTOR_PORT, MERU_RECEIVE_TIMEOUT, PUBLISHER_PORT, \
+    SSH_TUNNEL, STATE_PORT
 from meru.handlers import handle_action
 from meru.helpers import build_address
 from meru.serialization import decode_object, encode_object
@@ -144,7 +145,7 @@ class StateConsumerSocket(MessagingSocket):
         connect_address = build_address(BROKER_ADDRESS, STATE_PORT)
         self._socket = self.ctx.socket(zmq.DEALER)
         self._socket.setsockopt(zmq.LINGER, 0)
-        self._socket.setsockopt(zmq.RCVTIMEO, 2000)
+        self._socket.setsockopt(zmq.RCVTIMEO, MERU_RECEIVE_TIMEOUT)
 
         process_name = os.environ.get('MERU_PROCESS', None)
 
