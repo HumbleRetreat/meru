@@ -1,10 +1,13 @@
-from collections import namedtuple
+import asyncio
 import inspect
+from collections import namedtuple
 
-from meru.actions import Action
-from meru.base import StateNode
+from zmq import Again
+
+from meru.actions import Action, Ping
+from meru.exceptions import PingTimeout
 from meru.introspection import inspect_action_handler
-from meru.state import get_state, register_state, update_state
+from meru.state import StateNode, get_state, register_state, update_state
 
 HANDLERS = dict()
 
@@ -53,3 +56,19 @@ async def handle_action(action):
             yield action
     else:
         yield await handler.func(**handler_args)
+
+
+async def ping_pong():
+    from meru.sockets import StateConsumerSocket
+    state_consumer = StateConsumerSocket()
+
+    while True:
+        action = Ping()
+        await state_consumer.send(action)
+
+        try:
+            await state_consumer.receive()
+        except Again:
+            raise PingTimeout() from None
+
+        await asyncio.sleep(10)

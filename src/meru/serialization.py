@@ -1,10 +1,12 @@
 import json
-from typing import Type
+import pickle
 
 from meru.actions import Action
 from meru.base import MeruObject
+from meru.constants import MERU_SERIALIZATION_METHOD
 from meru.exceptions import ActionException
-from meru.introspection import get_class_init_args, get_subclasses
+from meru.helpers import get_subclasses
+from meru.introspection import get_subclasses
 
 
 def serialize_objects(obj):
@@ -17,12 +19,21 @@ def serialize_objects(obj):
 
 
 def deserialize_objects(obj):
+    from dataclasses import fields
     if 'object_type' in obj.keys():
         subclass = get_subclasses(MeruObject)[obj['object_type']]
 
         if subclass:
-            init_args = get_class_init_args(subclass)
-            calling_args = [obj[arg] for arg in init_args]
+            calling_args = []
+            for field in fields(subclass):
+                if not field.init:
+                    continue
+
+                cast_to = field.metadata.get('cast', None)
+                if cast_to:
+                    calling_args.append(cast_to(obj[field.name]))
+                else:
+                    calling_args.append(obj[field.name])
             action = subclass(*calling_args)
 
             # Force timestamp to be added correctly to Actions.
@@ -38,11 +49,18 @@ def deserialize_objects(obj):
     return obj
 
 
-def encode_object(action: MeruObject):
-    encoded_object = json.dumps(action, default=serialize_objects).encode()
+def encode_object(action: any):
+    if MERU_SERIALIZATION_METHOD == 'json':
+        encoded_object = json.dumps(action, default=serialize_objects).encode()
+    else:
+        encoded_object = pickle.dumps(action)
+
     return encoded_object
 
 
-def decode_object(state_data) -> Type[MeruObject]:
-    data = json.loads(state_data, object_hook=deserialize_objects)
+def decode_object(state_data):
+    if MERU_SERIALIZATION_METHOD == 'json':
+        data = json.loads(state_data, object_hook=deserialize_objects)
+    else:
+        data = pickle.loads(state_data)
     return data

@@ -30,8 +30,8 @@ async def request_state():
     logging.debug(states_to_request)
 
     action = RequireState(states_to_request)
-    await state_consumer.request_state(action)
-    state = await state_consumer.receive_state()
+    await state_consumer.send(action)
+    state = await state_consumer.receive()
     for node in state.nodes:
         STATES[node.__class__] = node
 
