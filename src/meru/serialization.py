@@ -10,7 +10,7 @@ from meru.introspection import get_subclasses
 
 
 def serialize_objects(obj):
-    if hasattr(obj, 'to_dict'):
+    if hasattr(obj, "to_dict"):
         data = obj.to_dict()
     else:
         data = obj.__dict__
@@ -20,8 +20,9 @@ def serialize_objects(obj):
 
 def deserialize_objects(obj):
     from dataclasses import fields
-    if 'object_type' in obj.keys():
-        subclass = get_subclasses(MeruObject)[obj['object_type']]
+
+    if "object_type" in obj.keys():
+        subclass = get_subclasses(MeruObject)[obj["object_type"]]
 
         if subclass:
             calling_args = []
@@ -29,7 +30,7 @@ def deserialize_objects(obj):
                 if not field.init:
                     continue
 
-                cast_to = field.metadata.get('cast', None)
+                cast_to = field.metadata.get("cast", None)
                 if cast_to:
                     calling_args.append(cast_to(obj[field.name]))
                 else:
@@ -41,7 +42,7 @@ def deserialize_objects(obj):
             # it can not be in __init__.
             # see: https://bugs.python.org/issue36077
             if isinstance(action, Action):
-                action.timestamp = obj['timestamp']
+                action.timestamp = obj["timestamp"]
 
             return action
         raise ActionException(f'Object {obj["object_type"]} not found.')
@@ -49,8 +50,8 @@ def deserialize_objects(obj):
     return obj
 
 
-def encode_object(action: any):
-    if MERU_SERIALIZATION_METHOD == 'json':
+def encode_object(action: any, method_override=None):
+    if "json" in (MERU_SERIALIZATION_METHOD, method_override):
         encoded_object = json.dumps(action, default=serialize_objects).encode()
     else:
         encoded_object = pickle.dumps(action)
@@ -58,9 +59,9 @@ def encode_object(action: any):
     return encoded_object
 
 
-def decode_object(state_data):
-    if MERU_SERIALIZATION_METHOD == 'json':
-        data = json.loads(state_data, object_hook=deserialize_objects)
+def decode_object(action: any, method_override=None):
+    if "json" in (MERU_SERIALIZATION_METHOD, method_override):
+        data = json.loads(action, object_hook=deserialize_objects)
     else:
-        data = pickle.loads(state_data)
+        data = pickle.loads(action)
     return data
