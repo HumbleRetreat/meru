@@ -31,14 +31,14 @@ def inspect_action_handler(func):
     for param in signature.parameters.values():
         if issubclass(param.annotation, Action):
             if found_action is not None:
-                raise Exception('An action handler can have only one action.')
+                raise Exception("An action handler can have only one action.")
             found_action = param.annotation
             calling_args[param.name] = param.annotation
         elif issubclass(param.annotation, StateNode):
             calling_args[param.name] = param.annotation
 
     if found_action is None:
-        raise Exception('An action handler needs one action.')
+        raise Exception("An action handler needs one action.")
 
     return found_action, calling_args
 
@@ -47,7 +47,7 @@ def inspect_action_handler(func):
 def get_class_init_args(cls: Type[MeruObject]):
     args = inspect.getfullargspec(cls.__init__)
     init_args = args.args[:]
-    init_args.remove('self')
+    init_args.remove("self")
 
     return init_args
 

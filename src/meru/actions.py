@@ -9,7 +9,7 @@ from meru.helpers import get_full_path_to_class
 
 @dataclass
 class StateUpdate(Action):
-    topic = b'StateUpdate'
+    topic = b"StateUpdate"
 
     nodes: List[StateNode]
 
@@ -26,13 +26,13 @@ class Pong(Action):
 
 @dataclass
 class RequireState(Action):
-    topic = b'state'
+    topic = b"state"
 
     nodes: List[str]
 
     def to_dict(self):
         sup = super().to_dict()
-        sup['nodes'] = [get_full_path_to_class(obj) for obj in sup['nodes']]
+        sup["nodes"] = [get_full_path_to_class(obj) for obj in sup["nodes"]]
         return sup
 
 

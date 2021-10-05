@@ -8,12 +8,19 @@ import zmq.asyncio
 from zmq.ssh import tunnel
 
 from meru.actions import Action
-from meru.constants import BIND_ADDRESS, BROKER_ADDRESS, COLLECTOR_PORT, MERU_RECEIVE_TIMEOUT, PUBLISHER_PORT, \
-    SSH_TUNNEL, STATE_PORT
+from meru.constants import (
+    BIND_ADDRESS,
+    BROKER_ADDRESS,
+    COLLECTOR_PORT,
+    MERU_RECEIVE_TIMEOUT,
+    PUBLISHER_PORT,
+    SSH_TUNNEL,
+    STATE_PORT,
+)
 from meru.helpers import build_address
 from meru.serialization import decode_object, encode_object
 
-logger = logging.getLogger('meru.socket')
+logger = logging.getLogger("meru.socket")
 
 
 class MessagingSocket:
@@ -40,7 +47,7 @@ class PublisherSocket(MessagingSocket):
         address = build_address(BIND_ADDRESS, PUBLISHER_PORT)
         self._socket = self.ctx.socket(zmq.PUB)
         self._socket.bind(address)
-        logger.debug(f'Bound publisher to {address}')
+        logger.debug(f"Bound publisher to {address}")
 
     async def publish(self, action: Action):
         data = [action.topic, encode_object(action)]
@@ -54,7 +61,7 @@ class CollectorSocket(MessagingSocket):
         self._socket = self.ctx.socket(zmq.PULL)
         self._socket.bind(bind_address)
         self._socket.setsockopt(zmq.LINGER, 0)
-        logger.debug(f'Bound collector to {bind_address}')
+        logger.debug(f"Bound collector to {bind_address}")
 
     async def collect(self):
         while True:
@@ -74,13 +81,14 @@ class SubscriberSocket(MessagingSocket):
             tunnel.tunnel_connection(self._socket, connect_address, SSH_TUNNEL)
         else:
             self._socket.connect(connect_address)
-        self._socket.setsockopt_string(zmq.SUBSCRIBE, '')
+        self._socket.setsockopt_string(zmq.SUBSCRIBE, "")
         self._socket.setsockopt(zmq.LINGER, 0)
 
-        logger.debug(f'Connected subscriber to {connect_address}')
+        logger.debug(f"Connected subscriber to {connect_address}")
 
     async def handle_incoming_actions(self):
         from meru.handlers import handle_action
+
         action = await self.receive_action()
         async for response in handle_action(action):
             yield response
@@ -107,7 +115,7 @@ class PushSocket(MessagingSocket):
             tunnel.tunnel_connection(self._socket, connect_address, SSH_TUNNEL)
         else:
             self._socket.connect(connect_address)
-        logger.debug(f'Connected pusher to {connect_address}')
+        logger.debug(f"Connected pusher to {connect_address}")
 
     async def push(self, action: Action):
         await self._socket.send_multipart([action.topic, encode_object(action)])
@@ -120,10 +128,10 @@ class StateManagerSocket(MessagingSocket):
         self._socket = self.ctx.socket(zmq.ROUTER)
         self._socket.setsockopt(zmq.LINGER, 0)
         self._socket.bind(bind_address)
-        logger.debug(f'Bound state manager to {bind_address}')
+        logger.debug(f"Bound state manager to {bind_address}")
 
     async def answer_state_request(self, identity, action):
-        logger.debug(f'Sending state update to {identity}')
+        logger.debug(f"Sending state update to {identity}")
         await self._socket.send_multipart([identity, encode_object(action)])
 
     async def send(self, identity, action):
@@ -145,18 +153,18 @@ class StateConsumerSocket(MessagingSocket):
         self._socket.setsockopt(zmq.LINGER, 0)
         self._socket.setsockopt(zmq.RCVTIMEO, MERU_RECEIVE_TIMEOUT)
 
-        process_name = os.environ.get('MERU_PROCESS', None)
+        process_name = os.environ.get("MERU_PROCESS", None)
 
         if process_name:
             hostname = socket.gethostname()
-            self._socket.setsockopt_string(zmq.IDENTITY, f'{hostname}-{process_name}')
+            self._socket.setsockopt_string(zmq.IDENTITY, f"{hostname}-{process_name}")
 
         if SSH_TUNNEL:
             tunnel.tunnel_connection(self._socket, connect_address, SSH_TUNNEL)
         else:
             self._socket.connect(connect_address)
 
-        logger.debug(f'Connected state consumer to {connect_address}')
+        logger.debug(f"Connected state consumer to {connect_address}")
 
     async def send(self, action):
         await self._socket.send_multipart([encode_object(action)])

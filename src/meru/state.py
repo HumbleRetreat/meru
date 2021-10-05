@@ -11,7 +11,7 @@ from meru.types import StateModelType
 
 STATES = dict()
 STATE_ACTION_HANDLERS = defaultdict(lambda: list())
-logger = logging.getLogger('meru.state')
+logger = logging.getLogger("meru.state")
 
 
 async def request_state():
@@ -56,10 +56,12 @@ async def answer_state_requests():
 def register_state(state_cls: Type[StateNode]):
     if state_cls not in STATES:
         STATES[state_cls] = state_cls()
-        for action, handlers in discover_state_action_handlers(STATES[state_cls]).items():
+        for action, handlers in discover_state_action_handlers(
+            STATES[state_cls]
+        ).items():
             STATE_ACTION_HANDLERS[action] += handlers
     else:
-        logger.warning(f'State {state_cls.__name__} has already been registered.')
+        logger.warning(f"State {state_cls.__name__} has already been registered.")
 
 
 def get_all_states():

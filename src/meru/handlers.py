@@ -11,7 +11,7 @@ from meru.state import StateNode, get_state, register_state, update_state
 
 HANDLERS = dict()
 
-ActionHandler = namedtuple('ActionHandler', 'func calling_args')
+ActionHandler = namedtuple("ActionHandler", "func calling_args")
 
 
 def register_action_handler(func):
@@ -60,6 +60,7 @@ async def handle_action(action):
 
 async def ping_pong():
     from meru.sockets import StateConsumerSocket
+
     state_consumer = StateConsumerSocket()
 
     while True:

@@ -10,13 +10,13 @@ class MeruObject:
 
     def to_dict(self):
         data = self.__dict__
-        data['object_type'] = self.object_type
+        data["object_type"] = self.object_type
         return data
 
 
 @dataclass
 class Action(MeruObject):
-    topic = b''
+    topic = b""
 
     timestamp: float = field(
         init=False,
