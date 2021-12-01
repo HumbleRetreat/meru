@@ -9,12 +9,12 @@ from meru.introspection import discover_state_action_handlers
 from meru.sockets import StateConsumerSocket, StateManagerSocket
 from meru.types import StateModelType
 
-STATES = dict()
-STATE_ACTION_HANDLERS = defaultdict(lambda: list())
+STATES = {}
+STATE_ACTION_HANDLERS = defaultdict(lambda: [])
 logger = logging.getLogger("meru.state")
 
 
-async def request_state():
+async def request_states():
     """
     Request states from the state manager. In order for this do have any effect
     all required states have to be registered::
@@ -27,13 +27,14 @@ async def request_state():
 
     states_to_request = list(STATES.keys())
 
-    logging.debug(states_to_request)
-
     action = RequireState(states_to_request)
     await state_consumer.send(action)
+
     state = await state_consumer.receive()
+
     for node in state.nodes:
         STATES[node.__class__] = node
+        logging.info(f"Loaded state from broker: {node.__class__.__name__}")
 
     return STATES
 
@@ -61,7 +62,7 @@ def register_state(state_cls: Type[StateNode]):
         ).items():
             STATE_ACTION_HANDLERS[action] += handlers
     else:
-        logger.warning(f"State {state_cls.__name__} has already been registered.")
+        pass
 
 
 def get_all_states():

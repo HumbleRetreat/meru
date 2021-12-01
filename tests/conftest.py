@@ -25,20 +25,20 @@ class DummyActionWithField(Action):
 
 @dataclass
 class DummyState(StateNode):
-    state_field: str = field(default='')
+    state_field: str = field(default="")
 
     def handle_dummy_action(self, action: DummyActionWithField):
         self.state_field = action.field
 
 
-@pytest.fixture(autouse=True, scope='function')
+@pytest.fixture(autouse=True, scope="function")
 def mocked_state_action_handlers(mocker):
-    return mocker.patch('meru.state.STATE_ACTION_HANDLERS', defaultdict(lambda: list()))
+    return mocker.patch("meru.state.STATE_ACTION_HANDLERS", defaultdict(lambda: list()))
 
 
-@pytest.fixture(autouse=True, scope='function')
+@pytest.fixture(autouse=True, scope="function")
 def mocked_states(mocker):
-    return mocker.patch('meru.state.STATES', {})
+    return mocker.patch("meru.state.STATES", {})
 
 
 @pytest.yield_fixture()

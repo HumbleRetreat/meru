@@ -1,55 +1,74 @@
+import inspect
 from collections import defaultdict
 from functools import lru_cache
-import inspect
 from typing import Type, Union, get_args, get_origin
 
-from meru.base import Action, MeruObject, StateNode
+from meru.base import Action, StateNode
+from meru.exceptions import HandlerException
 
 
 def discover_state_action_handlers(state_node: Type[StateNode]):
     handlers = defaultdict(lambda: [])
 
-    b = inspect.getmembers(state_node)
-    for (name, foo) in b:
-        if inspect.ismethod(foo):
-            signature = inspect.signature(foo)
+    members = inspect.getmembers(state_node)
+    for (_, value) in members:
+        if inspect.ismethod(value):
+            signature = inspect.signature(value)
             for param in signature.parameters.values():
                 if get_origin(param.annotation) is Union:
-                    for t in get_args(param.annotation):
-                        handlers[t].append(foo)
+                    for argument in get_args(param.annotation):
+                        handlers[argument].append(value)
                 elif issubclass(param.annotation, Action):
-                    handlers[param.annotation].append(foo)
+                    handlers[param.annotation].append(value)
     return handlers
 
 
-def inspect_action_handler(func):
+def inspect_action_handler_args(func: callable):
+    """
+    Inspects and action handler's calling arguments. An action handler can only have one
+    action and state nodes as calling arguments. Calling args need to be annotated in order
+    to be recognized. Having any other type or no type at all will raise an exception.
 
+    This will be fine:
+
+        async def do_something(action: SomeActionClass, some_state: SomeStateClass):
+            pass
+
+    This will not be fine, action is not annotated, some_param has an invalid type:
+
+        async def do_something(action, some_param: int):
+            pass
+
+    :param func:
+    :return:
+    """
     found_action = None
-    calling_args = {}
+    required_states = set()
     signature = inspect.signature(func)
 
     for param in signature.parameters.values():
         if issubclass(param.annotation, Action):
             if found_action is not None:
-                raise Exception("An action handler can have only one action.")
+                raise HandlerException("An action handler can have only one action.")
             found_action = param.annotation
-            calling_args[param.name] = param.annotation
         elif issubclass(param.annotation, StateNode):
-            calling_args[param.name] = param.annotation
+            if param.annotation in required_states:
+                raise HandlerException(
+                    f"Type '{param.annotation.__name__}' has been added twice to handler '{func.__name__}'. "
+                    f"This is not possible."
+                )
+            required_states.add(param.annotation)
+        else:
+            raise HandlerException(
+                f"Error registering {func.__name__}. "
+                f"An action handler can only have Actions and StateNodes as calling args. "
+                f"'{param}' is invalid."
+            )
 
     if found_action is None:
-        raise Exception("An action handler needs one action.")
+        raise HandlerException("An action handler needs one action.")
 
-    return found_action, calling_args
-
-
-@lru_cache(maxsize=None)
-def get_class_init_args(cls: Type[MeruObject]):
-    args = inspect.getfullargspec(cls.__init__)
-    init_args = args.args[:]
-    init_args.remove("self")
-
-    return init_args
+    return found_action, required_states
 
 
 @lru_cache(maxsize=None)

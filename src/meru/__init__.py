@@ -4,14 +4,11 @@ import os
 import signal
 import traceback
 from importlib import import_module
-
-import click
 from typing import Callable
 
 from meru.exceptions import PingTimeout
 from meru.log import setup_logging
 from meru.sockets import MessagingSocket
-
 
 logger = logging.getLogger("meru.core")
 
@@ -29,7 +26,7 @@ async def shutdown(loop, process_signal=None):
     await asyncio.gather(*tasks, return_exceptions=True)
 
     # https://github.com/zeromq/pyzmq/issues/1167
-    logger.debug(f"Destroying ZMQ context.")
+    logger.debug("Destroying ZMQ context.")
     MessagingSocket.ctx.destroy(linger=0)
 
     loop.stop()

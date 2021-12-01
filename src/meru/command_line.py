@@ -1,9 +1,9 @@
 import multiprocessing
+import time
+from typing import List
 
 import click
-import time
 from click import ClickException
-from typing import List
 
 from meru import run_process
 

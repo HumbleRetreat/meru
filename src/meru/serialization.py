@@ -1,11 +1,11 @@
 import json
 import pickle
+from dataclasses import fields
 
 from meru.actions import Action
 from meru.base import MeruObject
 from meru.constants import MERU_SERIALIZATION_METHOD
 from meru.exceptions import ActionException
-from meru.helpers import get_subclasses
 from meru.introspection import get_subclasses
 
 
@@ -19,8 +19,6 @@ def serialize_objects(obj):
 
 
 def deserialize_objects(obj):
-    from dataclasses import fields
-
     if "object_type" in obj.keys():
         subclass = get_subclasses(MeruObject)[obj["object_type"]]
 

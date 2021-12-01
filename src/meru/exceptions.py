@@ -8,3 +8,7 @@ class PingTimeout(Exception):
 
 class MeruException(Exception):
     pass
+
+
+class HandlerException(Exception):
+    pass

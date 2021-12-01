@@ -1,26 +1,25 @@
 import pytest
 
 from meru.actions import RequireState, StateUpdate
-from meru.sockets import CollectorSocket, PublisherSocket, PushSocket, StateConsumerSocket, StateManagerSocket, \
-    SubscriberSocket
-import meru.state
+from meru.sockets import CollectorSocket, PublisherSocket, PushSocket, SubscriberSocket
 
 
 @pytest.mark.asyncio
-@pytest.mark.freeze_time
 async def test_push_to_collector(dummy_action, wait):
-    pusher = PushSocket()
-    await wait()
-
     collector = CollectorSocket()
     await wait()
 
-    await pusher.push(dummy_action())
+    pusher = PushSocket()
+    await wait()
+
+    action = dummy_action()
+
+    await pusher.push(action)
     await wait()
 
     result = await collector.collect()
 
-    assert result == dummy_action()
+    assert result == action
 
     pusher.close()
     collector.close()
@@ -28,7 +27,6 @@ async def test_push_to_collector(dummy_action, wait):
 
 
 @pytest.mark.asyncio
-@pytest.mark.freeze_time
 async def test_publisher_to_subscriber(dummy_action, wait):
     publisher = PublisherSocket()
     await wait()
@@ -36,11 +34,13 @@ async def test_publisher_to_subscriber(dummy_action, wait):
     subscriber = SubscriberSocket()
     await wait()
 
-    await publisher.publish(dummy_action())
+    action = dummy_action()
+
+    await publisher.publish(action)
     await wait()
 
     sub_result = await subscriber.receive_action()
-    assert sub_result == dummy_action()
+    assert sub_result == action
 
     publisher.close()
     subscriber.close()
@@ -48,15 +48,14 @@ async def test_publisher_to_subscriber(dummy_action, wait):
 
 
 @pytest.mark.asyncio
-@pytest.mark.freeze_time
 async def test_state_manager_to_state_consumer(state_manager, state_consumer, wait):
     action = RequireState([])
-    await state_consumer.request_state(action)
+    await state_consumer.send(action)
 
     identity, action = await state_manager.get_state_request()
     action = StateUpdate([])
     await state_manager.answer_state_request(identity, action)
 
-    state = await state_consumer.receive_state()
+    state = await state_consumer.receive()
 
-    assert state == StateUpdate([])
+    assert state == action

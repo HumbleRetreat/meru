@@ -4,40 +4,25 @@ from collections import namedtuple
 
 from zmq import Again
 
-from meru.actions import Action, Ping
+from meru.actions import Ping
 from meru.exceptions import PingTimeout
-from meru.introspection import inspect_action_handler
+from meru.introspection import inspect_action_handler_args
 from meru.state import StateNode, get_state, register_state, update_state
 
-HANDLERS = dict()
+HANDLERS = {}
 
 ActionHandler = namedtuple("ActionHandler", "func calling_args")
 
 
 def register_action_handler(func):
-    action, calling_args = inspect_action_handler(func)
-    handler = ActionHandler(func, calling_args)
+    action, required_states = inspect_action_handler_args(func)
+    handler = ActionHandler(func, required_states)
     HANDLERS[action] = handler
 
-    for state_cls in calling_args.values():
-        if not issubclass(state_cls, StateNode):
-            continue
-
-        register_state(state_cls)
+    for state_cls in required_states:
+        if issubclass(state_cls, StateNode):
+            register_state(state_cls)
     return func
-
-
-def map_calling_args(calling_args: dict, action):
-    args = {}
-
-    for arg, cls in calling_args.items():
-        if issubclass(cls, StateNode):
-            args[arg] = get_state(cls)
-
-        if issubclass(cls, Action):
-            args[arg] = action
-
-    return args
 
 
 async def handle_action(action):
@@ -49,13 +34,13 @@ async def handle_action(action):
     if not handler:
         return
 
-    handler_args = map_calling_args(handler.calling_args, action)
+    states_to_inject = [get_state(cls) for cls in handler.calling_args]
 
     if inspect.isasyncgenfunction(handler.func):
-        async for action in handler.func(**handler_args):
+        async for action in handler.func(action, *states_to_inject):
             yield action
     else:
-        yield await handler.func(**handler_args)
+        yield await handler.func(action, *states_to_inject)
 
 
 async def ping_pong():

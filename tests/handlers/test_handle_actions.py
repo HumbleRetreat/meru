@@ -13,8 +13,13 @@ async def test_dont_handle_unknown_action(dummy_action):
 @pytest.mark.xfail
 @pytest.mark.asyncio
 @pytest.mark.freeze_time
-async def test_handle_async_generator_handler(dummy_action, dummy_state_cls, mocker, mocked_states):
-    mocker.patch('meru.handlers.HANDLERS', {})
+async def test_handle_async_generator_handler(
+    dummy_action, dummy_state_cls, mocker, mocked_states
+):
+    """
+    This test will fail, because I have no idea how to create a stub with annotations.
+    """
+    mocker.patch("meru.handlers.HANDLERS", {})
 
     async def dummy_handler(action: dummy_action, state: dummy_state_cls):
         yield dummy_action()
