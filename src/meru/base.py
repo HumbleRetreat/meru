@@ -24,7 +24,7 @@ class Action(MeruObject):
     )
 
     def __post_init__(self):
-        self.timestamp = time.time()
+        self.timestamp = int(time.time() * 1000)
 
 
 # pylint: disable=protected-access,too-few-public-methods,no-member
