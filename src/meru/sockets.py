@@ -1,7 +1,6 @@
 import asyncio
 import logging
-import os
-import socket
+from typing import Union
 
 import zmq
 import zmq.asyncio
@@ -17,7 +16,7 @@ from meru.constants import (
     SSH_TUNNEL,
     STATE_PORT,
 )
-from meru.helpers import build_address
+from meru.helpers import build_address, get_process_identity
 from meru.serialization import decode_object, encode_object
 
 logger = logging.getLogger("meru.socket")
@@ -73,7 +72,7 @@ class CollectorSocket(MessagingSocket):
 
 
 class SubscriberSocket(MessagingSocket):
-    def __init__(self):
+    def __init__(self, topics: Union[list, None] = None):
         super().__init__()
         connect_address = build_address(BROKER_ADDRESS, PUBLISHER_PORT)
         self._socket = self.ctx.socket(zmq.SUB)
@@ -81,7 +80,13 @@ class SubscriberSocket(MessagingSocket):
             tunnel.tunnel_connection(self._socket, connect_address, SSH_TUNNEL)
         else:
             self._socket.connect(connect_address)
-        self._socket.setsockopt_string(zmq.SUBSCRIBE, "")
+
+        if not topics:
+            self._socket.setsockopt_string(zmq.SUBSCRIBE, '')
+        else:
+            for topic in topics:
+                self._socket.setsockopt_string(zmq.SUBSCRIBE, topic)
+
         self._socket.setsockopt(zmq.LINGER, 0)
 
         logger.debug(f"Connected subscriber to {connect_address}")
@@ -150,11 +155,10 @@ class StateConsumerSocket(MessagingSocket):
         self._socket.setsockopt(zmq.LINGER, 0)
         self._socket.setsockopt(zmq.RCVTIMEO, MERU_RECEIVE_TIMEOUT)
 
-        process_name = os.environ.get("MERU_PROCESS", None)
+        process_id = get_process_identity()
 
-        if process_name:
-            hostname = socket.gethostname()
-            self._socket.setsockopt_string(zmq.IDENTITY, f"{hostname}-{process_name}")
+        if process_id:
+            self._socket.setsockopt_string(zmq.IDENTITY, process_id)
 
         if SSH_TUNNEL:
             tunnel.tunnel_connection(self._socket, connect_address, SSH_TUNNEL)

@@ -35,12 +35,13 @@ def deserialize_objects(obj):
                     calling_args.append(obj[field.name])
             action = subclass(*calling_args)
 
-            # Force timestamp to be added correctly to Actions.
-            # Timestamp can not be found with getfullargsspec, since
+            # Force timestamp and origin to be added correctly to Actions.
+            # Both fields can not be found with getfullargsspec, since
             # it can not be in __init__.
             # see: https://bugs.python.org/issue36077
             if isinstance(action, Action):
                 action.timestamp = obj["timestamp"]
+                action.origin = obj["origin"]
 
             return action
         raise ActionException(f'Object {obj["object_type"]} not found.')
