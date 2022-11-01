@@ -7,13 +7,15 @@ VENV_TWINE := $(VENV_BIN_PATH)/twine
 
 SOURCE_PATH = src/meru
 
+.PHONY: dist docs
+
 clean:
 	-rm -rf $(VENV_NAME)
 	-rm -rf src/*.egg-info
 
 develop: clean
 	python3.8 -m venv .venv
-	$(VENV_PIP) install --upgrade pip wheel twine
+	$(VENV_PIP) install --upgrade pip wheel twine sphinx
 	$(VENV_PIP) install -e .[develop]
 
 test:
@@ -28,10 +30,12 @@ ci: lint
 coverage:
 	$(VENV_BIN_PATH)/py.test --cov=$(SOURCE_PATH) --cov-report term-missing tests
 
-.PHONY: dist
 dist:
 	-rm -rf dist/
 	$(VENV_PYTHON) setup.py sdist bdist_wheel
 
 upload:
 	$(VENV_TWINE) upload dist/*
+
+docs:
+	make -C docs html

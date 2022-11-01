@@ -104,3 +104,7 @@ venv.bak/
 .mypy_cache/
 
 .idea/
+
+# sphinx
+docs/_build/
+docs/generated/
