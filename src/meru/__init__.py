@@ -56,6 +56,11 @@ def import_runner(full_path) -> Callable:
 
 
 def run_process(entry_point_path):
+    """Start a process.
+
+    Parameters:
+        entry_point_path: Python module path to the entrypoint.  E.g. `"my_app.processes.a_process.func"`.
+    """
     setup_logging()
     entry_point = import_runner(entry_point_path)
     os.environ["MERU_PROCESS"] = entry_point.__name__

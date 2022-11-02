@@ -1,3 +1,4 @@
+"""Helpers related to de-/serialization."""
 import json
 import pickle
 from dataclasses import fields
@@ -10,6 +11,16 @@ from meru.introspection import get_subclasses
 
 
 def serialize_objects(obj):
+    """Serializes a Python object to a dictionary.
+
+    If ``obj`` has a ``obj.to_dict()`` method, it is used instead of the builtin ``obj.__dict__()``.
+
+    Parameters:
+        obj: The object that should be serialized.
+
+    Returns:
+        A dictionary
+    """
     if hasattr(obj, "to_dict"):
         data = obj.to_dict()
     else:
@@ -19,6 +30,15 @@ def serialize_objects(obj):
 
 
 def deserialize_objects(obj):
+    """Deserializes an object from a dictionary.
+
+    Parameter:
+        obj: A dictionary containing the object's attributes.
+
+    Returns:
+        An object with the attributes in ``obj`` set to the specified values.  If the object's type
+        can not be determined, ``obj`` is returned unchanged.
+    """
     if "object_type" in obj.keys():
         subclass = get_subclasses(MeruObject)[obj["object_type"]]
 
@@ -50,6 +70,21 @@ def deserialize_objects(obj):
 
 
 def encode_object(action: any, method_override=None):
+    """Serializes an action.
+
+    The serialization method in :py:const:`meru.constants.MERU_SERIALIZATION_METHOD` is used if
+    ``method_override`` is None.
+
+    Parameters:
+        action: The action to serialize.
+        method_override: Can be used to override the default serialization method.
+
+    Returns:
+        The encoded object.
+
+    See Also:
+        :py:func:`decode_object`
+    """
     if "json" in (MERU_SERIALIZATION_METHOD, method_override):
         encoded_object = json.dumps(action, default=serialize_objects).encode()
     else:
@@ -59,6 +94,23 @@ def encode_object(action: any, method_override=None):
 
 
 def decode_object(action: any, method_override=None):
+    """Deserializes an action.
+
+    The inverse operation to :py:func:`encoded_object`.
+
+    The serialization method in :py:const:`meru.constants.MERU_SERIALIZATION_METHOD` is used if
+    ``method_override`` is None.
+
+    Parameters:
+        action: The action to deserialize.
+        method_override: Can be used to override the default serialization method.
+
+    Returns:
+        The decoded object.
+
+    See Also:
+        :py:func:`encode_object`
+    """
     if "json" in (MERU_SERIALIZATION_METHOD, method_override):
         data = json.loads(action, object_hook=deserialize_objects)
     else:

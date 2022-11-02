@@ -36,3 +36,7 @@ html_theme = 'alabaster'
 html_static_path = ['_static']
 
 autosummary_generate = True
+autosummary_imported_members = False
+# this does not what I'd expect it to do:
+# https://github.com/sphinx-doc/sphinx/issues/10809
+autosummary_ignore_module_all = False
