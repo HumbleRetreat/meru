@@ -11,7 +11,7 @@ class MeruObject:
         return self.__class__.__name__
 
     def to_dict(self):
-        data = self.__dict__
+        data = self.__dict__.copy()
         data["object_type"] = self.object_type
         return data
 
