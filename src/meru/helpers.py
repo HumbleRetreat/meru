@@ -1,6 +1,7 @@
 import os
 import socket
 from datetime import datetime
+from functools import lru_cache
 from importlib import import_module
 
 from meru.constants import MERU_HOSTNAME_IN_IDENTITY
@@ -22,6 +23,7 @@ def build_address(ip_address, port):
     return f"tcp://{ip_address}:{port}"
 
 
+@lru_cache
 def get_process_identity():
     """
     Get the identity for the current process. There are 4 possible outcomes:
