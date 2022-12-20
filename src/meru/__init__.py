@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+import platform
 import signal
 import traceback
 from importlib import import_module
@@ -60,11 +61,13 @@ def run_process(entry_point_path):
     os.environ["MERU_PROCESS"] = entry_point.__name__
     loop = asyncio.get_event_loop()
 
-    signals = (signal.SIGHUP, signal.SIGTERM, signal.SIGINT)
-    for sig in signals:
-        loop.add_signal_handler(
-            sig, lambda s=sig: asyncio.create_task(shutdown(loop, process_signal=s))
-        )
+    # Python on Windows does not seem to support SetConsoleCtrlHandler() at the moment.
+    if platform.system() != 'Windows':
+        signals = (signal.SIGHUP, signal.SIGTERM, signal.SIGINT)
+        for sig in signals:
+            loop.add_signal_handler(
+                sig, lambda s=sig: asyncio.create_task(shutdown(loop, process_signal=s))
+            )
 
     loop.set_exception_handler(handle_exception)
     loop.create_task(entry_point())
