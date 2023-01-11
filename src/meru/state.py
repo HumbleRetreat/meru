@@ -3,6 +3,7 @@
 This module maintains a global list of :py:class:`StateNode` objects.
 """
 from collections import defaultdict
+from dataclasses import fields
 import logging
 from typing import Type
 
@@ -40,7 +41,8 @@ async def request_states():
     state = await state_consumer.receive()
 
     for node in state.nodes:
-        STATES[node.__class__] = node
+        for f in fields(node):
+            setattr(STATES[node.__class__], f.name, getattr(node, f.name))
         logging.info(f"Loaded state from broker: {node.__class__.__name__}")
 
     return STATES
