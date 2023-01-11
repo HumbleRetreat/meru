@@ -1,3 +1,7 @@
+"""Functionality related to state management.
+
+This module maintains a global list of :py:class:`StateNode` objects.
+"""
 from collections import defaultdict
 import logging
 from typing import Type
@@ -21,7 +25,10 @@ async def request_states():
 
         register_state(SomeState)
 
-    :return: All loaded states
+    Used by the processes.
+
+    Returns:
+        All loaded states
     """
     state_consumer = StateConsumerSocket()
 
@@ -40,6 +47,17 @@ async def request_states():
 
 
 async def answer_state_requests():
+    """Answer incoming state requests.
+
+    Start an endless loop that listens for state update requests and answer them.  Meru does not
+    call the function itself, but a broker implementation probably wants to use this or a similar
+    implementation.
+
+    This coroutine is probably most often run in a separate ``asyncio`` task::
+
+        import asyncio
+        asyncio.create_task(answer_state_requests())
+    """
     state_manager = StateManagerSocket()
 
     while True:
@@ -55,6 +73,11 @@ async def answer_state_requests():
 
 
 def register_state(state_cls: Type[StateNode]):
+    """Add a state to the list of registered states.
+
+    This needs to get called at process initialization for every :py:class:`StateNode` that the
+    process plans on using.
+    """
     if state_cls not in STATES:
         STATES[state_cls] = state_cls()
         for action, handlers in discover_state_action_handlers(
@@ -66,14 +89,28 @@ def register_state(state_cls: Type[StateNode]):
 
 
 def get_all_states():
+    """Returns the global list of states."""
     return STATES
 
 
 async def update_state(action: Action):
+    """Calls the state update handlers that are triggered by an :py:class:`Action` oject.
+
+    Parameters:
+        action: The action.
+    """
     if action.__class__ in STATE_ACTION_HANDLERS:
         for method in STATE_ACTION_HANDLERS[action.__class__]:
             method(action)
 
 
 def get_state(state_cls: StateModelType) -> StateModelType:
+    """Get the instance of the given :py:class:`StateNode` used by this process.
+
+    Parameters:
+        state_cls: The class object of the requested state object.
+
+    Returns:
+        The instance local to this process.
+    """
     return STATES[state_cls]

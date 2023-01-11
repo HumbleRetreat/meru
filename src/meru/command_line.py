@@ -1,3 +1,5 @@
+"""A cli to launch one or more processes."""
+
 import multiprocessing
 from typing import List
 
@@ -40,8 +42,11 @@ def validate_process_names(process_names: List[str]):
     Compare a list of names against the list of registered processes. If there are names given that
     do not exist in the list of registered processes a click exception will be raised.
 
-    :param process_names: A list of names that will be validated against the registered processes.
-    :raise: `ClickException`
+    Parameters:
+        process_names: A list of names that will be validated against the registered processes.
+
+    Raises:
+        `ClickException`
     """
     invalid_process_names = [
         name for name in process_names if name not in AVAILABLE_PROCESSES
@@ -57,7 +62,8 @@ def start_multiple_processes(process_names: List[str]):
     Start one or multiple processes using Python's multiprocessing module. While it is technically
     possible to start only one process with this method, it is rather pointless to do so.
 
-    :param process_names: A list of process names that were registered with `register_process`.
+    Parameters:
+        process_names: A list of process names that were registered with :py:func:`register_process`.
     """
     validate_process_names(process_names)
 
@@ -87,8 +93,9 @@ def register_process(name: str, path: str):
     """
     Register a new process with the CLI and meru in general.
 
-    :param name: The name of the process to be used for the CLI
-    :param path: The entry point of the method.
+    Parameters:
+        name: The name of the process to be used for the CLI
+        path: The entry point of the method.
     """
     process_cli.command(name=name)(lambda: run_process(AVAILABLE_PROCESSES[name]))
     AVAILABLE_PROCESSES[name] = path

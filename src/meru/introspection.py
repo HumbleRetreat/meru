@@ -29,18 +29,20 @@ def inspect_action_handler_args(func: callable):
     action and state nodes as calling arguments. Calling args need to be annotated in order
     to be recognized. Having any other type or no type at all will raise an exception.
 
-    This will be fine:
+    This will be fine::
 
         async def do_something(action: SomeActionClass, some_state: SomeStateClass):
             pass
 
-    This will not be fine, action is not annotated, some_param has an invalid type:
+    This will not be fine, action is not annotated, some_param has an invalid type::
 
         async def do_something(action, some_param: int):
             pass
 
-    :param func:
-    :return:
+    Parameters:
+        func:
+
+    Returns:
     """
     found_action = None
     required_states = set()

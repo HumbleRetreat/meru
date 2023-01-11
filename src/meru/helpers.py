@@ -1,25 +1,52 @@
+"""Functionality related to action handlers."""
 import os
 import socket
 from datetime import datetime
 from functools import lru_cache
 from importlib import import_module
+from typing import Type
 
 from meru.constants import MERU_HOSTNAME_IN_IDENTITY
 
 
-def get_full_path_to_class(cls: object):
+def get_full_path_to_class(cls: Type) -> str:
+    """Returns the absolute class name for a class.
+
+    Parameters:
+        cls: A Python class.
+
+    Returns:
+        The class name prefixed with the full module path.
+
+    See Also:
+        :py:func:`get_type_from_string`
+    """
     mod = cls.__module__
     name = cls.__name__
 
     return f"{mod}.{name}"
 
 
-def get_type_from_string(cls_path: str):
+def get_type_from_string(cls_path: str) -> Type:
+    """Returns the class specified by the given absolute class name.
+
+    This is the inverse operation to :py:func:`get_full_path_to_class`.
+
+    Parameters:
+        cls_path: The absolute class name.
+
+    Returns:
+        The corresponding Python class object.
+
+    See Also:
+        :py:func:`get_full_path_to_class`
+    """
     module_name, class_name = cls_path.rsplit(".", 1)
     return getattr(import_module(module_name), class_name)
 
 
 def build_address(ip_address, port):
+    """Build a TCP URL from the address and port."""
     return f"tcp://{ip_address}:{port}"
 
 

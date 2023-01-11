@@ -1,14 +1,17 @@
+"""Exceptions for the use in other modules."""
+
+
 class ActionException(Exception):
-    pass
+    """An error related to :py:class:`Action`s occurred."""
 
 
 class PingTimeout(Exception):
-    pass
+    """A ping to the broker did not succeed."""
 
 
 class MeruException(Exception):
-    pass
+    """A generic exception."""
 
 
 class HandlerException(Exception):
-    pass
+    """An error related to action handlers occurred."""

@@ -1,3 +1,5 @@
+"""Constants for the other modules."""
+
 import os
 from distutils.util import strtobool
 
@@ -15,7 +17,9 @@ SSH_TUNNEL = os.environ.get("SSH_TUNNEL", False)
 MERU_SERIALIZATION_METHOD = os.environ.get("MERU_SERIALIZATION_METHOD", "json")
 MERU_RECEIVE_TIMEOUT = int(os.environ.get("MERU_RECEIVE_TIMEOUT", 4000))
 
-MERU_HOSTNAME_IN_IDENTITY = strtobool(os.environ.get("MERU_HOSTNAME_IN_IDENTITY", "true"))
+MERU_HOSTNAME_IN_IDENTITY = strtobool(
+    os.environ.get("MERU_HOSTNAME_IN_IDENTITY", "true")
+)
 
 if MERU_SERIALIZATION_METHOD not in ("json", "pickle"):
     raise MeruException(
